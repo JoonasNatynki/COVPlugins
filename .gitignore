@@ -8,7 +8,7 @@
 *.slo
 *.lo
 *.o
-*.obj
+**/.obj
 
 # Precompiled Headers
 *.gch
@@ -50,6 +50,7 @@ SourceArt/**/*.tga
 
 # Binary Files
 Binaries/
+**/Binaries/
 
 # Builds
 Build/
@@ -70,6 +71,7 @@ Saved/
 
 # Compiled source files for the engine to use
 Intermediate/
+**/Intermediate/
 
 # Cache files for the editor to use
 DerivedDataCache/
