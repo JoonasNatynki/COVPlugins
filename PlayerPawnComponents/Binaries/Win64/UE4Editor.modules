@@ -1,8 +1,0 @@
-{
-	"BuildId": "8386587",
-	"Modules": 
-	{
-		"FocusComponent": "UE4Editor-FocusComponent.dll",
-		"PlayerPawnComponents": "UE4Editor-PlayerPawnComponents.dll"
-	}
-}
