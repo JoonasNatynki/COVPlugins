@@ -23,7 +23,7 @@ using Lookup = TMap<TPair<FIndex, FIndex>, FIndex>;
 using IndexedMesh = TPair<VertexList, TriangleList>;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent), Blueprintable)
-class COV_API UIcoSphereComponent : public UActorComponent
+class ICOSPHEREVERTEXCOMPONENT_API UIcoSphereComponent : public UActorComponent
 {
 	GENERATED_BODY()
 

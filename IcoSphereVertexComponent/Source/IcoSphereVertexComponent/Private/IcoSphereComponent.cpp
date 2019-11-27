@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "IcoSphereComponent.h"
-#include "UE4Helpers.h"
 
 // Sets default values for this component's properties
 UIcoSphereComponent::UIcoSphereComponent()
@@ -95,7 +94,7 @@ IndexedMesh UIcoSphereComponent::GenerateIcoSphere_Internal(int32 subdivisions)
 	temp.Key = vertices;
 	temp.Value = triangles;
 
-	COV_LOG(LogTemp, Log, TEXT("Icosphere generated with (%d) subdivisions."), IcoSphereSubdivisions);
+	UE_LOG(LogTemp, Log, TEXT("Icosphere generated with (%d) subdivisions."), IcoSphereSubdivisions);
 	return temp;
 }
 
