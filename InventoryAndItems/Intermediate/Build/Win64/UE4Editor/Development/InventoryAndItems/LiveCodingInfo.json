@@ -1,0 +1,19 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.InventoryAndItems.cpp.obj": [
+			"CollectibleExample.cpp.obj",
+			"Inventory.cpp.obj",
+			"InventoryAndItems.cpp.obj",
+			"InventoryItem.cpp.obj",
+			"InventoryItemExample.cpp.obj"
+		],
+		"Module.InventoryAndItems.gen.cpp.obj": [
+			"CollectibleExample.gen.cpp.obj",
+			"Inventory.gen.cpp.obj",
+			"InventoryAndItems.init.gen.cpp.obj",
+			"InventoryItem.gen.cpp.obj",
+			"InventoryItemExample.gen.cpp.obj"
+		]
+	}
+}

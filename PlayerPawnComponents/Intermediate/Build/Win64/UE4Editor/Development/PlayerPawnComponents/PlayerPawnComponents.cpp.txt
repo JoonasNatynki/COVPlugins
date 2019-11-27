@@ -1,0 +1,2 @@
+C:\Users\Joonas.natynki\Documents\Unreal Projects\COV\Plugins\PlayerPawnComponents\Intermediate\Build\Win64\UE4Editor\Development\PlayerPawnComponents\Definitions.PlayerPawnComponents.h
+C:\Users\Joonas.natynki\Documents\Unreal Projects\COV\Plugins\PlayerPawnComponents\Source\PlayerPawnComponents\Public\PlayerPawnComponents.h

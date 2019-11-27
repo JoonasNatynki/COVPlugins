@@ -1,0 +1,14 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UE4Editor-GameplayObjectComponents.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"C:\Users\Joonas.natynki\Documents\Unreal Projects\COV\Intermediate\Build\Win64\COVEditor\Development\Engine\SharedPCH.Engine.h.obj"
+"C:\Users\Joonas.natynki\Documents\Unreal Projects\COV\Plugins\GameplayObjectComponents\Intermediate\Build\Win64\UE4Editor\Development\GameplayObjectComponents\Module.GameplayObjectComponents.cpp.obj"
+"C:\Users\Joonas.natynki\Documents\Unreal Projects\COV\Plugins\GameplayObjectComponents\Intermediate\Build\Win64\UE4Editor\Development\GameplayObjectComponents\Module.GameplayObjectComponents.gen.cpp.obj"
+"C:\Users\Joonas.natynki\Documents\Unreal Projects\COV\Plugins\GameplayObjectComponents\Intermediate\Build\Win64\UE4Editor\Development\GameplayObjectComponents\Default.rc2.res"
+/OUT:"C:\Users\Joonas.natynki\Documents\Unreal Projects\COV\Plugins\GameplayObjectComponents\Intermediate\Build\Win64\UE4Editor\Development\GameplayObjectComponents\UE4Editor-GameplayObjectComponents.lib"
+/INCLUDE:IMPLEMENT_MODULE_GameplayObjectComponents

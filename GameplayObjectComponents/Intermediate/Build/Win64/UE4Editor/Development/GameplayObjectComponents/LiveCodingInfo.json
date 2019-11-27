@@ -1,0 +1,13 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.GameplayObjectComponents.cpp.obj": [
+			"GameplayObjectComponents.cpp.obj",
+			"HoveringMotion.cpp.obj"
+		],
+		"Module.GameplayObjectComponents.gen.cpp.obj": [
+			"GameplayObjectComponents.init.gen.cpp.obj",
+			"HoveringMotion.gen.cpp.obj"
+		]
+	}
+}

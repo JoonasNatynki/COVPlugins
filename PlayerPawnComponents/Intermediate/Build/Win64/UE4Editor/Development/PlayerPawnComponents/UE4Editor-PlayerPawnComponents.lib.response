@@ -1,0 +1,13 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UE4Editor-PlayerPawnComponents.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"C:\Users\Joonas.natynki\Documents\Unreal Projects\COV\Intermediate\Build\Win64\COVEditor\Development\Engine\SharedPCH.Engine.h.obj"
+"C:\Users\Joonas.natynki\Documents\Unreal Projects\COV\Plugins\PlayerPawnComponents\Intermediate\Build\Win64\UE4Editor\Development\PlayerPawnComponents\PlayerPawnComponents.cpp.obj"
+"C:\Users\Joonas.natynki\Documents\Unreal Projects\COV\Plugins\PlayerPawnComponents\Intermediate\Build\Win64\UE4Editor\Development\PlayerPawnComponents\Default.rc2.res"
+/OUT:"C:\Users\Joonas.natynki\Documents\Unreal Projects\COV\Plugins\PlayerPawnComponents\Intermediate\Build\Win64\UE4Editor\Development\PlayerPawnComponents\UE4Editor-PlayerPawnComponents.lib"
+/INCLUDE:IMPLEMENT_MODULE_PlayerPawnComponents
