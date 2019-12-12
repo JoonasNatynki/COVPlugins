@@ -15,6 +15,7 @@
 #include <KismetEditorUtilities.h>
 
 #endif
+#include <Kismet/KismetMathLibrary.h>
 
 #define LOCTEXT_NAMESPACE "UE4CodeHelpers"
 
@@ -280,6 +281,15 @@ TArray<UClass*> UE4CodeHelpers::GetAllAssetsOfType(TSubclassOf<AActor> type, con
 	} //for each generated class
 
 	return Into;
+}
+
+FVector UE4CodeHelpers::RotateVectorAroundPoint(const FVector& vectorToRotate, const FVector& pointToRotateAround, const FRotator& theRotationToApply)
+{
+	FVector translatedVector = vectorToRotate - pointToRotateAround;
+	translatedVector = theRotationToApply.RotateVector(translatedVector);
+	translatedVector = pointToRotateAround + translatedVector;
+
+	return translatedVector;
 }
 
 bool UE4CodeHelpers::GenericIsArrayEmpty(void* targetArray, const UArrayProperty* arrayProp)

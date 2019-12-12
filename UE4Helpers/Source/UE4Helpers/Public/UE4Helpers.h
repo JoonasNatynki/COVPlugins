@@ -54,10 +54,9 @@ UE_LOG(_namespace, _logcategory, TEXT("%s%s%s"), *netModePrefix, PRINT_FUNCTION,
 			break;\
 		}\
 	}\
-	if(!tempComp)\
+	if(!ensureMsgf(tempComp, TEXT("%s Component was not found."), *FString(#_componentclass)))\
 	{\
-	UE_LOG(LogTemp, Warning, TEXT("%s Component was not found."), *FString(#_componentclass));\
-	FMessageLog("Blueprint").Warning(FText::Format(NSLOCTEXT("UE4CodeHelpers", "Help", "No {0} found in "), FText::FromString(FString(#_componentclass))))->AddToken(FUObjectToken::Create(this));\
+	FMessageLog("PIE").Warning(FText::Format(NSLOCTEXT("UE4CodeHelpers", "Help", "No {0} found in "), FText::FromString(FString(#_componentclass))))->AddToken(FUObjectToken::Create(this));\
 	}\
 }\
 
@@ -165,12 +164,16 @@ public:
 		static bool IsArrayEmpty(const TArray<int32>& TargetArray);
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable)
+		//	Calculates a rotator that has its up vector pointing to the normal given. Very useful for things that need to stick to surfaces like bullet decals and footprints
 		static FRotator OrientRotationToNormalVector(const FRotator& CurrentRotation, const FVector& Normal);
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable)
 		//	A more lightweight version of the GetAllChildClassesOfType. This will only search the classes that are already loaded in memory.
 		static TArray<UClass*> GetAllAssetsOfType(TSubclassOf<AActor> type, const FString& pathToSearchFor);
 
+	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable)
+		//	Rotates a vector around a point
+		static FVector RotateVectorAroundPoint(const FVector& vectorToRotate, const FVector& pointToRotateAround, const FRotator& theRotationToApply);
 
 
 	static bool GenericIsArrayEmpty(void* targetArray, const UArrayProperty* arrayProp);
