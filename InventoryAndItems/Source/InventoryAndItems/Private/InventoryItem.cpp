@@ -5,7 +5,7 @@ DEFINE_LOG_CATEGORY(LogInventoryItem)
 
 UInventoryItemComponent::UInventoryItemComponent()
 {
-	SetIsReplicated(true);
+	SetIsReplicatedByDefault(true);
 }
 
 void UInventoryItemComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty, FDefaultAllocator>& OutLifetimeProps) const
