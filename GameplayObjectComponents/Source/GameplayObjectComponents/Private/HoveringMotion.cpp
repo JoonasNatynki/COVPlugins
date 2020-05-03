@@ -100,7 +100,7 @@ void UHoveringMotion::SetHoveringComponent(USceneComponent* _componentToHover)
 	{
 		ComponentToHover = _componentToHover;
 		bIsRotatingRootComponent = IsHoverComponentRootComponent();
-		bool bOwnerIsPawn = Cast<APawn>(GetOwner());
+		bool bOwnerIsPawn = Cast<APawn>(GetOwner()) == nullptr;
 
 		UE_LOG(LogHoveringMotion, Log, TEXT("Mesh to rotate set to (%s)"), *GetNameSafe(ComponentToHover));
 
