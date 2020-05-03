@@ -7,6 +7,7 @@
 #include "Despawnable.h"
 #include "DespawnableActor.generated.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(LogDespawnableActor, Log, All)
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class GAMEPLAYOBJECTCOMPONENTS_API UDespawnableActor : public UActorComponent
@@ -22,12 +23,14 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(Category = "Despawnable", BlueprintCallable)
 		FDespawnableRecord GetActorState();
 
-	UFUNCTION(BlueprintCallable)
-		void RestoreActorState(UPARAM(ref) FDespawnableRecord& Data);
+	UFUNCTION(Category = "Despawnable", BlueprintCallable)
+		static void RestoreActorState(AActor* ActorToRestore, FDespawnableRecord Data);
+
+	UFUNCTION(Category = "Despawnable", BlueprintCallable, meta = (WorldContext=WorldContextObject))
+		static AActor* RespawnActorFromState(const UObject* WorldContextObject, FDespawnableRecord Data);
 };

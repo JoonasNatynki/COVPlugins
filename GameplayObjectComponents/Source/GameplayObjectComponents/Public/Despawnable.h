@@ -19,6 +19,12 @@ struct FDespawnableRecord
 		UClass* Class;
 
 	UPROPERTY(BlueprintReadWrite, SaveGame)
+		AActor* Owner;
+
+	UPROPERTY(BlueprintReadWrite, SaveGame)
+		ULevel* OwningLevel;
+
+	UPROPERTY(BlueprintReadWrite, SaveGame)
 		FTransform Transform;
 
 	UPROPERTY(BlueprintReadWrite, SaveGame)

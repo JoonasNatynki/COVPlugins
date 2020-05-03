@@ -12,6 +12,8 @@ FDespawnableRecord UDespawnableSerializer::Write(AActor* Owner)
 	Record.Class = Owner->GetClass();
 	Record.Name = Owner->GetName();
 	Record.Transform = Owner->GetActorTransform();
+	Record.Owner = Owner->GetOwner();
+	Record.OwningLevel = Owner->GetTypedOuter<ULevel>();
 
 	FMemoryWriter Wri = FMemoryWriter(Record.Data);
 	ReaderWriter = &Wri;
@@ -25,9 +27,11 @@ FDespawnableRecord UDespawnableSerializer::Write(AActor* Owner)
 
 void UDespawnableSerializer::Read(AActor* Owner, FDespawnableRecord& Data)
 {
+	ensureMsgf(Owner->IsA(Data.Class), TEXT("Types are incompatible. The actor restoring its data NEEDS to be of same type or inherit from the type that is stored in the data. Types are (%s, %s)"), *Owner->GetClass()->GetName(), *Data.Class->GetName());
 	FMemoryReader Reader = FMemoryReader(Data.Data);
 	ReaderWriter = &Reader;
 
+	//	Restore the data
 	IDespawnable::Execute_SerializeActor(Owner, this);
 	ReaderWriter = nullptr;
 }

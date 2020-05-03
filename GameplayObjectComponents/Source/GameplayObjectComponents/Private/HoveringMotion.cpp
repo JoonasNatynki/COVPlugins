@@ -51,7 +51,7 @@ void UHoveringMotion::DefaultToRootComponentAnimation_Internal()
 
 	AActor* owner = GetOwner();
 
-	if (owner->GetIsReplicated() && owner->bReplicateMovement)
+	if (owner->GetIsReplicated() && owner->IsReplicatingMovement())
 	{
 		//	The actor is set to replicate its movement over the network. Only authority should now animate the root motion as it then replicates its movement to the listening clients
 		bool bAnimationAllowedOnDedicatedServers = (IS_DEDICATED_SERVER && !bAnimateOnlyLocally);
