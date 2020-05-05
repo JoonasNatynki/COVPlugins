@@ -56,6 +56,10 @@ AActor* UDespawnableActor::RespawnActorFromState(const UObject* WorldContextObje
 
 			return SpawnedActor;
 		}
+		else
+		{
+			UE_LOG(LogDespawnableActor, Warning, TEXT("...Actor of type (%s) was NOT successfully respawned."), *Data.Class->GetName());
+		}
 	}
 
 	return nullptr;
