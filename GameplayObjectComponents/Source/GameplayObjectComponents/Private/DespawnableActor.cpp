@@ -45,7 +45,7 @@ AActor* UDespawnableActor::RespawnActorFromState(const UObject* WorldContextObje
 
 		const FTransform& Trans = Data.Transform;
 		TSubclassOf<AActor> Class = TSubclassOf<AActor>(Data.Class);
-		AActor* SpawnedActor = World->SpawnActorDeferred<AActor>(Class, Trans, Data.Owner, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+		AActor* SpawnedActor = World->SpawnActorDeferred<AActor>(Class, Trans, Data.Owner.Get(), nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 
 		if (ensure(IsValid(SpawnedActor)))
 		{
