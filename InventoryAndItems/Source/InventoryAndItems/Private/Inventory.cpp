@@ -51,53 +51,55 @@ void UInventoryComponent::TransferInventoryDataToObject(UObject* fromObject, UOb
 	}
 }
 
-bool UInventoryComponent::AddItem(AActor* itemActor)
+bool UInventoryComponent::AddItem(AActor* ItemActor)
 {
-	if (ensure(GetOwner()->HasAuthority()))
+	AActor* InventoryOwner = GetOwner();
+
+	if (ensure(InventoryOwner->HasAuthority()))
 	{
-		ensure(IsValid(itemActor));
+		ensure(IsValid(ItemActor));
 
-		UE_LOG(LogInventory, Log, TEXT("Adding item (%s) to inventory on (%s)."), *GetNameSafe(itemActor), *GetNameSafe(GetOwner()));
+		UE_LOG(LogInventory, Log, TEXT("Adding item (%s) to inventory on (%s)."), *GetNameSafe(ItemActor), *GetNameSafe(InventoryOwner));
 
-		UInventoryItemComponent* inventoryItemComp = itemActor->FindComponentByClass<UInventoryItemComponent>();
+		UInventoryItemComponent* InventoryItemComp = ItemActor->FindComponentByClass<UInventoryItemComponent>();
 
-		if (IsValid(inventoryItemComp))
+		if (IsValid(InventoryItemComp))
 		{
-			if (ensureMsgf(inventoryItemComp->CorrespondingActorClassToSpawn, TEXT("No corresponding item class defined for the inventory item. Is this intended?")))
+			if (ensureMsgf(InventoryItemComp->CorrespondingActorClassToSpawn, TEXT("No [CorrespondingActorClassToSpawn] defined for the item (%s) being put into the inventory on actor (%s). The item could not be transferred to the inventory."), *GetNameSafe(ItemActor), *GetNameSafe(InventoryOwner)))
 			{
 				//	We spawn the actor deferred. This way we can initialize the actor and its properties properly before it Constructs or BeginPlays
 				//	BEGIN SPAWN---------------------------------------------------------------------------------------------------------------------------------
-				AActor* spawnedActor = GetWorld()->SpawnActorDeferred<AActor>(inventoryItemComp->CorrespondingActorClassToSpawn, GetOwner()->GetTransform());
+				AActor* SpawnedActor = GetWorld()->SpawnActorDeferred<AActor>(InventoryItemComp->CorrespondingActorClassToSpawn, InventoryOwner->GetTransform());
 
-				check(IsValid(spawnedActor));
+				check(IsValid(SpawnedActor));
 
 				//	Corresponding spawned actor must also have the inventory item component
-				UInventoryItemComponent* spawnedActorInventoryItemComp = spawnedActor->FindComponentByClass<UInventoryItemComponent>();
-				check(IsValid(spawnedActorInventoryItemComp));
+				UInventoryItemComponent* SpawnedActorInventoryItemComp = SpawnedActor->FindComponentByClass<UInventoryItemComponent>();
+				check(IsValid(SpawnedActorInventoryItemComp));
 				//	Set the corresponding class to be who spawned it
-				spawnedActorInventoryItemComp->CorrespondingActorClassToSpawn = GetClass();
+				SpawnedActorInventoryItemComp->CorrespondingActorClassToSpawn = GetClass();
 				//	Update the spawned item guid to match the original
-				spawnedActorInventoryItemComp->SetItemGUID(inventoryItemComp->GetItemGUID());
+				SpawnedActorInventoryItemComp->SetItemGUID(InventoryItemComp->GetItemGUID());
 
-				UE_LOG(LogInventory, Verbose, TEXT("Corresponding actor (%s) spawned for item (%s). Transferring inventory data to the spawned object..."), *GetNameSafe(spawnedActor), *GetNameSafe(itemActor));
+				UE_LOG(LogInventory, Verbose, TEXT("Corresponding actor (%s) spawned for item (%s). Transferring inventory data to the spawned object..."), *GetNameSafe(SpawnedActor), *GetNameSafe(ItemActor));
 
-				TransferInventoryDataToObject(itemActor, spawnedActor);
+				TransferInventoryDataToObject(ItemActor, SpawnedActor);
 
 				//	Ok now spawned actor can finalize spawning
-				UGameplayStatics::FinishSpawningActor(spawnedActor, spawnedActor->GetTransform());
+				UGameplayStatics::FinishSpawningActor(SpawnedActor, SpawnedActor->GetTransform());
 				//	END SPAWN---------------------------------------------------------------------------------------------------------------------------------
 
 				//	Attach spawned actor to the inventory owner
-				spawnedActor->AttachToActor(GetOwner(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+				SpawnedActor->AttachToActor(InventoryOwner, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 
-				UE_LOG(LogInventory, Verbose, TEXT("Inventory data transferred to actor (%s)."), *GetNameSafe(spawnedActor));
+				UE_LOG(LogInventory, Verbose, TEXT("Inventory data transferred to actor (%s)."), *GetNameSafe(SpawnedActor));
 
-				Inventory.Add(spawnedActor);
+				Inventory.Add(SpawnedActor);
 				OnRep_Inventory();
 			}
 
 			//	Maybe destroy the original item now?
-			itemActor->Destroy();
+			ItemActor->Destroy();
 
 			return true;
 		}

@@ -173,7 +173,7 @@ void UFocusComponent::UpdateFocusedActor()
 	if (bFocusActorHasChanged)
 	{
 		CachedFocusedActor = newFocusActor.Get();
-		UE_LOG(LogTemp, Log, TEXT("Focus actor changed to (%s)."), *GetNameSafe(CachedFocusedActor));
+		UE_LOG(LogTemp, Verbose, TEXT("Focus actor changed to (%s)."), *GetNameSafe(CachedFocusedActor));
 		OnFocusedActorChanged.Broadcast(newFocusActor.Get());
 	}
 }
