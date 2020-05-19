@@ -104,7 +104,8 @@ FVector UFocusComponent::GetFocusRayCastEndLocation_Internal(const FVector& star
 		case(EFocusMethod::CameraDirection):
 			{
 				//	end point target direction
-				endLoc = OwnerCameraManagerActor->GetActorForwardVector();
+			const FVector StartLocation = OwnerCameraManagerActor->GetActorLocation();
+				endLoc = StartLocation + (OwnerCameraManagerActor->GetActorForwardVector() * FocusingMaxDistance);
 				break;
 			}
 		case(EFocusMethod::MouseScreenPosition):
@@ -112,7 +113,7 @@ FVector UFocusComponent::GetFocusRayCastEndLocation_Internal(const FVector& star
 				FVector WorldLocation;
 				FVector WorldDirection;
 				PlayerController->DeprojectMousePositionToWorld(WorldLocation, WorldDirection);
-				endLoc = WorldLocation + WorldDirection;
+				endLoc = WorldLocation + (WorldDirection * FocusingMaxDistance);
 				break;
 			}
 		}
