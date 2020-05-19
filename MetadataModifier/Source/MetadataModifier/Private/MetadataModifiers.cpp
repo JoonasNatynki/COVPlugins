@@ -102,7 +102,7 @@ UMetadataModifiers::GetMetamodifierValue(const FName MetaModifierName) const
 	for (auto& metaMod2 : metaMods)
 	{
 		//	Go through each property in the struct to look for a property that matches the type of the template type
-		for (TFieldIterator<UProperty> struct_property(metaMod2.StaticStruct()); struct_property; ++struct_property)
+		for (TFieldIterator<FProperty> struct_property(metaMod2.StaticStruct()); struct_property; ++struct_property)
 		{
 			const FString propertyTypeName = struct_property->GetCPPType();
 

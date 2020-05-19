@@ -23,10 +23,6 @@ void FFocusComponentModule::ShutdownModule()
 	// we call this function before unloading the module.
 }
 
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
-
 static TAutoConsoleVariable<int32> CVarShowFocusDebugs(TEXT("COV.DebugFocusPoint"),
 	0,
 	TEXT("Show the point of focus in the world."));
@@ -94,13 +90,32 @@ FVector UFocusComponent::GetFocusRayCastStartLocation_Internal()
 
 FVector UFocusComponent::GetFocusRayCastEndLocation_Internal(const FVector& startLoc)
 {
-	AActor* ownerCameraManagerActor = GetOwnerCameraManagerActor_Internal();
+	const AActor* OwnerCameraManagerActor = GetOwnerCameraManagerActor_Internal();
+	const FVector CameraManagerPosition = OwnerCameraManagerActor->GetActorLocation();
+	const APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	const APlayerController* PlayerController = OwnerPawn->GetController<APlayerController>();
 	FVector endLoc;
 
 	//	If owner doesn't have a camera manager present, just use pawn forward vector instead(?)
-	if (ownerCameraManagerActor)
+	if (OwnerCameraManagerActor)
 	{
-		endLoc = startLoc + (ownerCameraManagerActor->GetActorForwardVector() * FocusingMaxDistance);
+		switch (FocusMethod)
+		{
+		case(EFocusMethod::CameraDirection):
+			{
+				//	end point target direction
+				endLoc = OwnerCameraManagerActor->GetActorForwardVector();
+				break;
+			}
+		case(EFocusMethod::MouseScreenPosition):
+			{
+				FVector WorldLocation;
+				FVector WorldDirection;
+				PlayerController->DeprojectMousePositionToWorld(WorldLocation, WorldDirection);
+				endLoc = WorldLocation + WorldDirection;
+				break;
+			}
+		}
 	}
 	else
 	{
@@ -123,9 +138,7 @@ AActor* UFocusComponent::GetOwnerCameraManagerActor_Internal()
 TWeakObjectPtr<AActor> UFocusComponent::UpdateFocusedActor_Internal()
 {
 	TWeakObjectPtr<AActor> focusedActor;
-
 	UpdateFocusWorldLocation_Internal();
-
 	TArray<FHitResult> validHits = GetOverlappingActorsInFocusArea_Internal();
 
 	//	Now go through all the overlapping actors and figure out the best candidate that the player might actually intend on focusing
@@ -182,7 +195,7 @@ const TArray<FHitResult> UFocusComponent::GetOverlappingActorsInFocusArea_Intern
 
 	EDrawDebugTrace::Type debugTrace = (bShowDebug) ? (EDrawDebugTrace::ForDuration) : (EDrawDebugTrace::None);
 
-	UKismetSystemLibrary::SphereTraceMulti(this, startLoc, endLoc, FocusingRadiusExtent, UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel1), false, actorsToIgnore, debugTrace, hits, true, FLinearColor::Green, FLinearColor::Red, GetWorld()->GetDeltaSeconds());
+	UKismetSystemLibrary::SphereTraceMulti(this, startLoc, endLoc, FocusingRadiusExtent, UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel1), false, actorsToIgnore, debugTrace, hits, true, FLinearColor::Red, FLinearColor::Red, GetWorld()->GetDeltaSeconds());
 
 	if (hits.Num() > 0)
 	{

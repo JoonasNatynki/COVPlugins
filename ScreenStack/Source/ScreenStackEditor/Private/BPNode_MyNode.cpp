@@ -53,7 +53,7 @@ FText UBPNode_PushScreenByClass::GetBaseNodeTitle() const
 
 FText UBPNode_PushScreenByClass::GetNodeTitleFormat() const
 {
-	return LOCTEXT("CreateItemData", "Creates and pushes {ClassName} into a screen stack");
+	return LOCTEXT("CreateItemData", "Create and push {ClassName} into the screen stack");
 }
 
 //which class can be used with this node to create objects. All childes of class can be used.

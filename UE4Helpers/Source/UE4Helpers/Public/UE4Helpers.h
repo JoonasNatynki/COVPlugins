@@ -176,14 +176,14 @@ public:
 		static FVector RotateVectorAroundPoint(const FVector& vectorToRotate, const FVector& pointToRotateAround, const FRotator& theRotationToApply);
 
 
-	static bool GenericIsArrayEmpty(void* targetArray, const UArrayProperty* arrayProp);
+	static bool GenericIsArrayEmpty(void* targetArray, const FArrayProperty* arrayProp);
 
 	DECLARE_FUNCTION(execIsArrayEmpty)
 	{
 		Stack.MostRecentProperty = nullptr;
-		Stack.StepCompiledIn<UArrayProperty>(NULL);
+		Stack.StepCompiledIn<FArrayProperty>(NULL);
 		void* ArrayAddr = Stack.MostRecentPropertyAddress;
-		UArrayProperty* ArrayProperty = Cast<UArrayProperty>(Stack.MostRecentProperty);
+		FArrayProperty* ArrayProperty = CastField<FArrayProperty>(Stack.MostRecentProperty);
 		if (!ArrayProperty)
 		{
 			Stack.bArrayContextFailed = true;

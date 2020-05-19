@@ -22,6 +22,14 @@ public:
 	virtual void ShutdownModule() override;
 };
 
+UENUM(BlueprintType)
+enum class EInputMode : uint8
+{
+	GameOnly,
+	GameAndUI,
+	UIOnly
+};
+
 DECLARE_LOG_CATEGORY_EXTERN(ScreenStack, Log, All)
 
 class UScreen;
@@ -42,20 +50,27 @@ public:
 		bool bScreenIsLocked = false;
 
 	UPROPERTY(Category = "Screen", EditDefaultsOnly)
-		//	If the screen is an overlay. Screen under it will be visible until a screen that is not an overlay.
+		//	Screens that are below in the stack will be visible. Note: If the screen below is an overlay, the visibility will stop there.
 		bool bScreenIsAnOverlay = false;
 
 	UPROPERTY(Category = "Screen", EditDefaultsOnly)
-		//	If there can exist more than one of these screen or just one. If only one instance is allowed and the same screen is being pushed back into the stack, the stack will simply move that screen to the top and display it instead.
+		//	If there can exist more than one of these screens at once. If you push a second screen of the same type, the existing screen will be moved to the top of the stack instead.
 		bool bAllowMultipleInstances = false;
 
 	UPROPERTY(Category = "Screen", EditDefaultsOnly, meta = (EditCondition = "!bAllowMultipleInstances"))
-		//	If a new screen that is only allowed to exist once will override the existing one or simply fail to be pushed into the stack?
-		bool bOverrideExisting = true;
+		//	Instead of moving the existing screen to the top of the stack, replace the screen entirely instead.
+		bool bOverrideExistingScreen = true;
 
 	UPROPERTY(Category = "Screen", EditDefaultsOnly)
-		//	If this screen should take over mouse and keyboard input
-		bool bTakeOverInput = false;
+		//	Should the game or UI consume input, or both if possible?
+		EInputMode InputMode = EInputMode::GameOnly;
+
+	UPROPERTY(Category = "Screen", EditDefaultsOnly)
+		//	If mouse cursor is shown for mouse input
+		bool bShowMouseCursor = false;
+
+	UPROPERTY(Category = "Screen", EditDefaultsOnly, meta = (EditCondition = "bShowMouseCursor"))
+		EMouseLockMode MouseLockMode = EMouseLockMode::LockAlways;
 
 	UPROPERTY(Category = "Screen", EditDefaultsOnly)
 		//	Bind a key to automatically close the screen with
@@ -67,10 +82,6 @@ public:
 	UFUNCTION(Category = "Screen", BlueprintCallable, BlueprintPure)
 		//	Is the screen locked in place and can't be removed from stack?
 		bool GetHasScreenLock() const { return bScreenIsLocked; };
-
-	UFUNCTION(Category = "Screen", BlueprintCallable, BlueprintPure)
-		//	Should this screen capture the mouse cursor?
-		bool GetShouldScreenTakeOverMouse() const { return bTakeOverInput; };
 
 	UFUNCTION(Category = "Screen", BlueprintCallable)
 		// Locks the screen so that it can't be removed from the stack.
@@ -95,15 +106,18 @@ public:
 	UPROPERTY()
 		FOnBeginDestroy OnbeginDestroy;
 
-	void ReleaseInputControl();
-	void TakeOverInputControl();
+	void RemoveInputMode();
+	void ApplyInputMode();
 
 	//	Bind button to close the screen
 	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 	bool bScreenStackManagerChangesVisibility = false;
-	bool bShouldScreenBeShownWhenPossible = true;	//	Basically tells you if something else wanted to hide this screen or not
+	ESlateVisibility OutsideVisibilityOverride = ESlateVisibility::SelfHitTestInvisible;	//	Basically tells you if something else wanted to hide this screen or not
 	virtual void SetVisibility(ESlateVisibility visibility) override;
 	virtual void RemoveFromParent() override;
+
+private:
+	bool bOriginalShowMouseCursor = false;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScreenRemovedFromStack, UScreen*, RemovedScreen);
@@ -128,7 +142,7 @@ protected:
 	void UpdateScreenStackVisibilities_Internal();
 
 	//	This function handles screen visibility properly for screens
-	void SetScreenVisible_Internal(UScreen* screen) const;
+	void SetScreenVisibility(UScreen* screen, const ESlateVisibility Visibility) const;
 
 public:
 	// Called every frame

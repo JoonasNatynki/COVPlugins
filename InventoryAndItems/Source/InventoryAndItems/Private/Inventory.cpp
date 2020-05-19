@@ -24,7 +24,7 @@ void UInventoryComponent::TransferInventoryDataToObject(UObject* fromObject, UOb
 	ensure(IsValid(fromObject) && IsValid(toObject));
 
 	//	Go through each property in the class and look for a metatag with the INVENTORYPROPERTY
-	for (TFieldIterator<UProperty> property_1(fromObject->GetClass()); property_1; ++property_1)
+	for (TFieldIterator<FProperty> property_1(fromObject->GetClass()); property_1; ++property_1)
 	{
 		const FName metaTag(INVENTORYPROPERTY);
 		const bool bHasMetaTag_1 = property_1->HasMetaData(metaTag);
@@ -33,7 +33,7 @@ void UInventoryComponent::TransferInventoryDataToObject(UObject* fromObject, UOb
 		if(bHasMetaTag_1)
 		{
 			//	Now go through every property in the other object and see if there is a matching one
-			for (TFieldIterator<UProperty> property_2(toObject->GetClass()); property_2; ++property_2)
+			for (TFieldIterator<FProperty> property_2(toObject->GetClass()); property_2; ++property_2)
 			{
 				const bool bHasMetaTag_2 = property_2->HasMetaData(metaTag);
 

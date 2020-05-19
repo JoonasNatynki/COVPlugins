@@ -7,6 +7,7 @@
 #include "Components/ActorComponent.h"
 #include <DelegateCombinations.h>
 #include <CollisionQueryParams.h>
+#include <GameFramework/PlayerController.h>
 #include "FocusComponent.generated.h"
 
 class APlayerCameraManager;
@@ -20,9 +21,12 @@ public:
 	virtual void ShutdownModule() override;
 };
 
-
-// Fill out your copyright notice in the Description page of Project Settings.
-
+UENUM(BlueprintType)
+enum class EFocusMethod : uint8
+{
+	CameraDirection,
+	MouseScreenPosition
+};
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFocusedActorChanged, AActor*, NewFocusedActor);
 
@@ -40,6 +44,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 		FOnFocusedActorChanged OnFocusedActorChanged;
+
+	UPROPERTY(Category = "Focus", EditDefaultsOnly, BlueprintReadWrite)
+		EFocusMethod FocusMethod = EFocusMethod::CameraDirection;
 
 	UPROPERTY(Category = "Focus", BlueprintReadOnly, VisibleAnywhere, Transient)
 		AActor* CachedFocusedActor;
@@ -132,32 +139,48 @@ FORCEINLINE FHitResult UFocusComponent::SimpleTraceByChannel(const UObject* inOb
 	return RV_Hit;
 }
 
-FORCEINLINE FHitResult UFocusComponent::CastCrossHairLineTrace(const AActor* character, float rayDistance)
+FORCEINLINE FHitResult UFocusComponent::CastCrossHairLineTrace(const AActor* Character, float RayDistance)
 {
 	FHitResult RV_Hit(ForceInit);
-	const APawn* pawn = Cast<APawn>(character);
+	const APawn* Pawn = Cast<APawn>(Character);
 
-	if (!ensureMsgf(IsValid(pawn), TEXT("Could not cast crosshair line trace. The actor wasn't a pawn or the pawn wasn't valid anymore.")))
+	if (!ensureMsgf(IsValid(Pawn), TEXT("Could not cast crosshair line trace. The actor wasn't a pawn or the pawn wasn't valid anymore.")))
 	{
 		return RV_Hit;
 	}
 
-	AActor* pawnCameraManager = Cast<AActor>(TryGetPawnCameraManager(pawn));
+	const APlayerController* PlayerController = Pawn->GetController<APlayerController>();
+	const AActor* PawnCameraManager = Cast<AActor>(TryGetPawnCameraManager(Pawn));
 
-	if (IsValid(pawnCameraManager))
+	if (ensure(IsValid(PawnCameraManager)))
 	{
 
 		//	Ray starting point
-		FVector playerViewWorldLocation = pawnCameraManager->GetActorLocation();
-		//	end point target direction
+		const FVector PlayerViewWorldLocation = PawnCameraManager->GetActorLocation();
+		FVector ControllerForwardVector;
 
-		FVector controllerForwardVector = pawnCameraManager->GetActorForwardVector();
+		switch (FocusMethod)
+		{
+		case(EFocusMethod::CameraDirection):
+			{
+				//	end point target direction
+				ControllerForwardVector = PawnCameraManager->GetActorForwardVector();
+				break;
+			}
+		case(EFocusMethod::MouseScreenPosition):
+			{
+				FVector WorldLocation;
+				FVector WorldDirection;
+				PlayerController->DeprojectMousePositionToWorld(WorldLocation, WorldDirection);
+				ControllerForwardVector = PlayerViewWorldLocation + (PlayerViewWorldLocation + (WorldDirection));
+			}
+		}
 
 		RV_Hit = SimpleTraceByChannel
 		(
-			character,
-			playerViewWorldLocation + (controllerForwardVector),
-			playerViewWorldLocation + (controllerForwardVector * rayDistance),
+			Character,
+			PlayerViewWorldLocation + (ControllerForwardVector),
+			PlayerViewWorldLocation + (ControllerForwardVector * RayDistance),
 			ECollisionChannel::ECC_Camera,
 			FName("AimTrace")
 		);

@@ -21,9 +21,7 @@ void FScreenStackModule::ShutdownModule()
 	
 IMPLEMENT_MODULE(FScreenStackModule, ScreenStack)
 
-
 DEFINE_LOG_CATEGORY(ScreenStack)
-
 
 UScreenStack::UScreenStack()
 {
@@ -46,28 +44,23 @@ void UScreenStack::UpdateScreenStackVisibilities_Internal()
 	//	If the next screen in line is an overlay, reveal every screen under it until you hit one that is not an overlay.
 	for (int x = (screenStack.Num() - 1); x >= 0; x--)
 	{
-		auto screen = screenStack[x];
+		UScreen* screen = screenStack[x];
+		const bool bCanBeShownIfPossible = screen->OutsideVisibilityOverride != ESlateVisibility::Collapsed && screen->OutsideVisibilityOverride != ESlateVisibility::Hidden;
 
+		//	Are we the top-most screen?
 		if (x == screenStack.Num() - 1)
 		{
-			//	Is the screen hidden by someone else? If it is, don't touch its visibility
-			if (screen->bShouldScreenBeShownWhenPossible)
+			//	If someone else has hidden or collapsed this screen outside of this manager class, this will return FALSE.
+			if (bCanBeShownIfPossible)
 			{
-				//	Set first one to always be visible
-				SetScreenVisible_Internal(screen);
-
-				if (screen->GetShouldScreenTakeOverMouse())
-				{
-					screen->TakeOverInputControl();
-				}
-				else
-				{
-					screen->ReleaseInputControl();
-				}
+				//	Top-most screen that isn't hidden by an outside caller is always visible
+				SetScreenVisibility(screen, ESlateVisibility::SelfHitTestInvisible);
+				//	Apply the screens input mode too
+				screen->ApplyInputMode();
 			}
 			else
 			{
-				screen->ReleaseInputControl();
+				screen->RemoveInputMode();
 			}
 		}
 		else
@@ -75,23 +68,23 @@ void UScreenStack::UpdateScreenStackVisibilities_Internal()
 			//	If the screen above is an overlay, this screen should be visible as well no matter what if the one above is visible
 			if (screenStack[x + 1]->GetIsScreenAnOverlay() && screenStack[x + 1]->GetVisibility() != ESlateVisibility::Hidden)
 			{
-				if (screen->bShouldScreenBeShownWhenPossible)
+				if (bCanBeShownIfPossible)
 				{
-					SetScreenVisible_Internal(screen);
+					SetScreenVisibility(screen, ESlateVisibility::SelfHitTestInvisible);
 				}
 			}
 			else
 			{
-				screen->SetVisibility(ESlateVisibility::Hidden);
+				SetScreenVisibility(screen, ESlateVisibility::Hidden);
 			}
 		}
 	}
 }
 
-void UScreenStack::SetScreenVisible_Internal(UScreen* screen) const
+void UScreenStack::SetScreenVisibility(UScreen* screen, const ESlateVisibility Visibility) const
 {
 	screen->bScreenStackManagerChangesVisibility = true;
-	screen->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	screen->SetVisibility(Visibility);
 }
 
 APlayerController* UScreenStack::GetOwnerPlayerController() const
@@ -128,7 +121,7 @@ UObject* UScreenStack::PushScreenByClass(const TSubclassOf<UScreen> widgetClass)
 
 			UScreen* screen = foundScreens[0];
 
-			if (screen->bOverrideExisting)
+			if (screen->bOverrideExistingScreen)
 			{
 				UE_LOG(ScreenStack, Log, TEXT("Overriding existing screen of type (%s)."), *GetNameSafe(widgetClass->StaticClass()));
 
@@ -301,22 +294,44 @@ UScreen::UScreen(const FObjectInitializer& ObjInit) : Super(ObjInit)
 	bIsFocusable = true;
 }
 
-void UScreen::ReleaseInputControl()
+void UScreen::RemoveInputMode()
 {
-	GetOwningPlayer()->bShowMouseCursor = false;
+	GetOwningPlayer()->bShowMouseCursor = bOriginalShowMouseCursor;
 	GetOwningPlayer()->SetInputMode(FInputModeGameOnly());
 }
 
-void UScreen::TakeOverInputControl()
+void UScreen::ApplyInputMode()
 {
-	GetOwningPlayer()->bShowMouseCursor = true;
-	SetUserFocus(GetOwningPlayer());
+	bOriginalShowMouseCursor = GetOwningPlayer()->bShowMouseCursor;
 
-	FInputModeUIOnly input_mode;
-
-	input_mode.SetWidgetToFocus(TakeWidget());
-	input_mode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
-	GetOwningPlayer()->SetInputMode(input_mode);
+	switch (InputMode)
+	{
+	case EInputMode::GameAndUI:
+		{
+			GetOwningPlayer()->bShowMouseCursor = bShowMouseCursor;
+			FInputModeGameAndUI InputMoud;
+			InputMoud.SetWidgetToFocus(TakeWidget());
+			InputMoud.SetLockMouseToViewportBehavior(MouseLockMode);
+			GetOwningPlayer()->SetInputMode(InputMoud);
+			break;
+		}
+	case EInputMode::GameOnly:
+		{
+			GetOwningPlayer()->bShowMouseCursor = bShowMouseCursor;
+			FInputModeGameOnly InputMoud;
+			GetOwningPlayer()->SetInputMode(InputMoud);
+			break;
+		}
+	case EInputMode::UIOnly:
+		{
+			GetOwningPlayer()->bShowMouseCursor = bShowMouseCursor;
+			FInputModeUIOnly InputMoud;
+			InputMoud.SetWidgetToFocus(TakeWidget());
+			InputMoud.SetLockMouseToViewportBehavior(MouseLockMode);
+			GetOwningPlayer()->SetInputMode(InputMoud);
+			break;
+		}
+	}
 }
 
 FReply UScreen::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
@@ -355,9 +370,9 @@ void UScreen::SetVisibility(ESlateVisibility visibility)
 		return;
 	}
 
-	bShouldScreenBeShownWhenPossible = ((visibility != ESlateVisibility::Hidden) && (visibility != ESlateVisibility::Collapsed));
+	OutsideVisibilityOverride = visibility;;
 
-	Super::SetVisibility(visibility);
+	Super::SetVisibility(OutsideVisibilityOverride);
 }
 
 void UScreen::RemoveFromParent()
