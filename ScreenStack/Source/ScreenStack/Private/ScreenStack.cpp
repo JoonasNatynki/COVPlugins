@@ -312,6 +312,7 @@ void UScreen::ApplyInputMode()
 			FInputModeGameAndUI InputMoud;
 			InputMoud.SetWidgetToFocus(TakeWidget());
 			InputMoud.SetLockMouseToViewportBehavior(MouseLockMode);
+			InputMoud.SetHideCursorDuringCapture(false);
 			GetOwningPlayer()->SetInputMode(InputMoud);
 			break;
 		}
