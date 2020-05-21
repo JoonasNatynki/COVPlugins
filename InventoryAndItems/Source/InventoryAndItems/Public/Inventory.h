@@ -2,9 +2,6 @@
 
 #include "Inventory.generated.h"
 
-#define stringify_literal( x ) # x
-#define INVENTORYPROPERTY stringify_literal(InventoryProperty)
-
 DECLARE_LOG_CATEGORY_EXTERN(LogInventory, Log, All)
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemAdded, UInventoryItemComponent*, InventoryItem);

@@ -23,29 +23,21 @@ void UInventoryComponent::TransferInventoryDataToObject(UObject* fromObject, UOb
 {
 	ensure(IsValid(fromObject) && IsValid(toObject));
 
-	//	Go through each property in the class and look for a metatag with the INVENTORYPROPERTY
+	//	Go through each property in the class
 	for (TFieldIterator<FProperty> property_1(fromObject->GetClass()); property_1; ++property_1)
 	{
-		const FName metaTag(INVENTORYPROPERTY);
-		const bool bHasMetaTag_1 = property_1->HasMetaData(metaTag);
-
-		//	Only look into properties that have the metadata tag. These items want these properties to pass over to the item as it is put into - or taken out - of the inventory.
-		if(bHasMetaTag_1)
+		//	Now go through every property in the other object and see if there is a matching one
+		for (TFieldIterator<FProperty> property_2(toObject->GetClass()); property_2; ++property_2)
 		{
-			//	Now go through every property in the other object and see if there is a matching one
-			for (TFieldIterator<FProperty> property_2(toObject->GetClass()); property_2; ++property_2)
+			//	Check that both have matching types and matching names
+			if (property_1->SameType(*property_2) && (property_1->GetFName() == property_2->GetFName()))
 			{
-				const bool bHasMetaTag_2 = property_2->HasMetaData(metaTag);
+				UE_LOG(LogInventory, Log, TEXT("Copying (%s)(%s) property from (%s) to (%s)"), *property_1->GetCPPType(), *property_1->GetFName().ToString(), *GetNameSafe(fromObject), *GetNameSafe(toObject));
+				void* theData = property_1->ContainerPtrToValuePtr<void>(fromObject);
+				void* destinationData = property_2->ContainerPtrToValuePtr<void>(toObject);
+				property_1->CopySingleValue(destinationData, theData);
 
-				if (bHasMetaTag_2 && (property_1->SameType(*property_1)) && (property_1->GetFName() == property_2->GetFName()))
-				{
-					UE_LOG(LogInventory, Log, TEXT("Copying (%s)(%s) property from (%s) to (%s)"), *property_1->GetCPPType(), *property_1->GetFName().ToString(), *GetNameSafe(fromObject), *GetNameSafe(toObject));
-					void* theData = property_1->ContainerPtrToValuePtr<void>(fromObject);
-					void* destinationData = property_2->ContainerPtrToValuePtr<void>(toObject);
-					property_1->CopySingleValue(destinationData, theData);
-
-					break;
-				}
+				break;
 			}
 		}
 	}
