@@ -28,6 +28,13 @@ enum class EFocusMethod : uint8
 	MouseScreenPosition
 };
 
+UENUM(BlueprintType)
+enum class EFocusDistanceRelativeTo : uint8
+{
+	PlayerPawn,
+	Camera
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFocusedActorChanged, AActor*, NewFocusedActor);
 
 DECLARE_LOG_CATEGORY_EXTERN(LogFocus, Log, All)
@@ -47,6 +54,9 @@ public:
 
 	UPROPERTY(Category = "Focus", EditDefaultsOnly, BlueprintReadWrite)
 		EFocusMethod FocusMethod = EFocusMethod::CameraDirection;
+
+	UPROPERTY(Category = "Focus", EditDefaultsOnly, BlueprintReadWrite)
+		EFocusDistanceRelativeTo FocusDistanceMeasuredRelativeTo = EFocusDistanceRelativeTo::PlayerPawn;
 
 	UPROPERTY(Category = "Focus", BlueprintReadOnly, VisibleAnywhere, Transient)
 		AActor* CachedFocusedActor;
@@ -97,18 +107,23 @@ public:
 		void UpdateFocusedActor();
 	UFUNCTION(Category = "Focus", BlueprintCallable)
 		void SetFocusedActor(AActor* newFocus) { CachedFocusedActor = newFocus; };
+	
 
+private:
 	const void DrawDebugs(float deltaTime);
 	const TArray<FHitResult> GetOverlappingActorsInFocusArea_Internal();
 	const TWeakObjectPtr<AActor> FindBestFocusCandidate_Internal(TArray<FHitResult> overlappingActors);
 	void UpdateFocusWorldLocation_Internal();
 
 	FHitResult CastCrossHairLineTrace(const AActor* character, float rayDistance);
-	APlayerCameraManager* TryGetPawnCameraManager(const APawn* pawn);
+	APlayerCameraManager* TryGetCameraManager(const APawn* pawn) const;
 	FVector GetFocusRayCastStartLocation_Internal();
 	FVector GetFocusRayCastEndLocation_Internal(const FVector& startLoc);
 	FHitResult SimpleTraceByChannel(const UObject* inObj, const FVector& startPos, const FVector& endPos, ECollisionChannel channel, const FName& TraceTag) const;
-	AActor* GetOwnerCameraManagerActor_Internal();
+	AActor* TryGetCameraManagerActor_Internal() const;
+	APlayerController* TryGetPlayerController() const;
+	APawn* TryGetPlayerPawn() const;
+	const FVector GetFocusDistanceRelativeLocation() const;
 };
 
 FVector UFocusComponent::GetFocusWorldLocation() const
@@ -142,21 +157,15 @@ FORCEINLINE FHitResult UFocusComponent::SimpleTraceByChannel(const UObject* inOb
 FORCEINLINE FHitResult UFocusComponent::CastCrossHairLineTrace(const AActor* Character, float RayDistance)
 {
 	FHitResult RV_Hit(ForceInit);
-	const APawn* Pawn = Cast<APawn>(Character);
 
-	if (!ensureMsgf(IsValid(Pawn), TEXT("Could not cast crosshair line trace. The actor wasn't a pawn or the pawn wasn't valid anymore.")))
-	{
-		return RV_Hit;
-	}
+	const APlayerController* PlayerController = TryGetPlayerController();
+	const AActor* CameraManagerActor = TryGetCameraManagerActor_Internal();
 
-	const APlayerController* PlayerController = Pawn->GetController<APlayerController>();
-	const AActor* PawnCameraManager = Cast<AActor>(TryGetPawnCameraManager(Pawn));
-
-	if (ensure(IsValid(PawnCameraManager)))
+	if (ensure(IsValid(CameraManagerActor)))
 	{
 
 		//	Ray starting point
-		const FVector PlayerViewWorldLocation = PawnCameraManager->GetActorLocation();
+		const FVector PlayerViewWorldLocation = CameraManagerActor->GetActorLocation();
 		FVector ControllerForwardVector;
 
 		switch (FocusMethod)
@@ -164,7 +173,7 @@ FORCEINLINE FHitResult UFocusComponent::CastCrossHairLineTrace(const AActor* Cha
 		case(EFocusMethod::CameraDirection):
 			{
 				//	end point target direction
-				ControllerForwardVector = PawnCameraManager->GetActorForwardVector();
+				ControllerForwardVector = CameraManagerActor->GetActorForwardVector();
 				break;
 			}
 		case(EFocusMethod::MouseScreenPosition):

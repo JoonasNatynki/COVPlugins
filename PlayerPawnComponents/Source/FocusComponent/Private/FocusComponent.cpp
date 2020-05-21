@@ -44,9 +44,9 @@ void UFocusComponent::BeginPlay()
 	Super::BeginPlay();
 }
 
-APlayerCameraManager* UFocusComponent::TryGetPawnCameraManager(const APawn* pawn)
+APlayerCameraManager* UFocusComponent::TryGetCameraManager(const APawn* pawn) const
 {
-	if (!ensureMsgf(IsValid(pawn), TEXT("The pawn wasn't valid anymore.")))
+	if (!IsValid(pawn))
 	{
 		FMessageLog("PIE").Error(FText::FromString("Could not get pawn camera manager. Pawn wasn't valid."));
 		return nullptr;
@@ -72,7 +72,7 @@ APlayerCameraManager* UFocusComponent::TryGetPawnCameraManager(const APawn* pawn
 
 FVector UFocusComponent::GetFocusRayCastStartLocation_Internal() 
 {
-	AActor* ownerCameraManagerActor = GetOwnerCameraManagerActor_Internal();
+	AActor* ownerCameraManagerActor = TryGetCameraManagerActor_Internal();
 	FVector startLoc;
 
 	//	If owner doesn't have a camera manager present, just use pawn forward vector instead(?)
@@ -90,10 +90,7 @@ FVector UFocusComponent::GetFocusRayCastStartLocation_Internal()
 
 FVector UFocusComponent::GetFocusRayCastEndLocation_Internal(const FVector& startLoc)
 {
-	const AActor* OwnerCameraManagerActor = GetOwnerCameraManagerActor_Internal();
-	const FVector CameraManagerPosition = OwnerCameraManagerActor->GetActorLocation();
-	const APawn* OwnerPawn = Cast<APawn>(GetOwner());
-	const APlayerController* PlayerController = OwnerPawn->GetController<APlayerController>();
+	const AActor* OwnerCameraManagerActor = TryGetCameraManagerActor_Internal();
 	FVector endLoc;
 
 	//	If owner doesn't have a camera manager present, just use pawn forward vector instead(?)
@@ -104,12 +101,13 @@ FVector UFocusComponent::GetFocusRayCastEndLocation_Internal(const FVector& star
 		case(EFocusMethod::CameraDirection):
 			{
 				//	end point target direction
-			const FVector StartLocation = OwnerCameraManagerActor->GetActorLocation();
+				const FVector StartLocation = OwnerCameraManagerActor->GetActorLocation();
 				endLoc = StartLocation + (OwnerCameraManagerActor->GetActorForwardVector() * FocusingMaxDistance);
 				break;
 			}
 		case(EFocusMethod::MouseScreenPosition):
 			{
+				const APlayerController* PlayerController = TryGetPlayerController();
 				FVector WorldLocation;
 				FVector WorldDirection;
 				PlayerController->DeprojectMousePositionToWorld(WorldLocation, WorldDirection);
@@ -126,30 +124,103 @@ FVector UFocusComponent::GetFocusRayCastEndLocation_Internal(const FVector& star
 	return endLoc;
 }
 
-AActor* UFocusComponent::GetOwnerCameraManagerActor_Internal() 
+AActor* UFocusComponent::TryGetCameraManagerActor_Internal() const
 {
-	APawn* ownerPawn = Cast<APawn>(GetOwner());
+	const APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	if (IsValid(OwnerPawn))
+	{
+		return Cast<AActor>(TryGetCameraManager(OwnerPawn));
+	}
 
-	//	Non-pawn owners for focus component are not supported just yet
-	check(IsValid(ownerPawn));
+	const AController* OwnerController = Cast<AController>(GetOwner());
+	if (IsValid(OwnerController))
+	{
+		const APlayerController* PlayerController = Cast<APlayerController>(OwnerController);
+		check(IsValid(PlayerController));
+		return Cast<AActor>(PlayerController->PlayerCameraManager);
+	}
 
-	return Cast<AActor>(TryGetPawnCameraManager(ownerPawn));
+	return nullptr;
+}
+
+APlayerController* UFocusComponent::TryGetPlayerController() const
+{
+	APlayerController* PlayerController = nullptr;
+
+	const APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	if (IsValid(OwnerPawn))
+	{
+		PlayerController = Cast<APlayerController>(OwnerPawn->GetController());
+	}
+	else
+	{
+		AController* OwnerController = Cast<AController>(GetOwner());
+		if (IsValid(OwnerController))
+		{
+			PlayerController = Cast<APlayerController>(OwnerController);
+		}
+	}
+
+	check(IsValid(PlayerController));
+	return PlayerController;
+}
+
+APawn* UFocusComponent::TryGetPlayerPawn() const
+{
+	APawn* OwnerPawn = nullptr;
+
+	OwnerPawn = Cast<APawn>(GetOwner());
+	if (IsValid(OwnerPawn))
+	{
+		return OwnerPawn;
+	}
+	else
+	{
+		AController* OwnerController = Cast<AController>(GetOwner());
+		if (IsValid(OwnerController))
+		{
+			OwnerPawn = OwnerController->GetPawn();
+			if (IsValid(OwnerPawn))
+			{
+				return OwnerPawn;
+			}
+		}
+	}
+
+	return nullptr;
+}
+
+const FVector UFocusComponent::GetFocusDistanceRelativeLocation() const
+{
+	switch (FocusDistanceMeasuredRelativeTo)
+	{
+	case(EFocusDistanceRelativeTo::PlayerPawn):
+	{
+		return TryGetPlayerPawn()->GetActorLocation();
+	}
+	case(EFocusDistanceRelativeTo::Camera):
+	{
+		return TryGetCameraManagerActor_Internal()->GetActorLocation();
+	}
+	}
+
+	return FVector::ZeroVector;
 }
 
 TWeakObjectPtr<AActor> UFocusComponent::UpdateFocusedActor_Internal()
 {
-	TWeakObjectPtr<AActor> focusedActor;
+	TWeakObjectPtr<AActor> FocusedActor;
 	UpdateFocusWorldLocation_Internal();
 	TArray<FHitResult> validHits = GetOverlappingActorsInFocusArea_Internal();
 
 	//	Now go through all the overlapping actors and figure out the best candidate that the player might actually intend on focusing
 	if (validHits.Num() > 0)
 	{
-		TWeakObjectPtr<AActor> bestCandidate = FindBestFocusCandidate_Internal(validHits);
-		focusedActor = bestCandidate;
+		TWeakObjectPtr<AActor> BestCandidate = FindBestFocusCandidate_Internal(validHits);
+		FocusedActor = BestCandidate;
 	}
 
-	return focusedActor;
+	return FocusedActor;
 }
 
 AActor* UFocusComponent::GetFocusedActor()
@@ -196,7 +267,7 @@ const TArray<FHitResult> UFocusComponent::GetOverlappingActorsInFocusArea_Intern
 
 	EDrawDebugTrace::Type debugTrace = (bShowDebug) ? (EDrawDebugTrace::ForDuration) : (EDrawDebugTrace::None);
 
-	UKismetSystemLibrary::SphereTraceMulti(this, startLoc, endLoc, FocusingRadiusExtent, UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel1), false, actorsToIgnore, debugTrace, hits, true, FLinearColor::Red, FLinearColor::Red, GetWorld()->GetDeltaSeconds());
+	UKismetSystemLibrary::SphereTraceMulti(this, startLoc, endLoc, FocusingRadiusExtent, UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel1), false, actorsToIgnore, debugTrace, hits, true, FLinearColor::Red, FLinearColor::Green, GetWorld()->GetDeltaSeconds());
 
 	if (hits.Num() > 0)
 	{
@@ -229,8 +300,9 @@ const TWeakObjectPtr<AActor> UFocusComponent::FindBestFocusCandidate_Internal(TA
 			//	Whether or not to only focus on actors with the FocusableComponent and if they are focusable or not
 			if (bFocusOnlyOnFocusables)
 			{
+				const FVector FocusRelativeLocation = GetFocusDistanceRelativeLocation();
 				UFocusableComponent* focusableComponent = Cast<UFocusableComponent>(hit.Actor->GetComponentByClass(UFocusableComponent::StaticClass()));
-				float distanceToActorWhoIsFocusing = (GetOwner()->GetActorLocation() - focusActorLocation).Size();	//	Used for trimming results
+				float distanceToActorWhoIsFocusing = (FocusRelativeLocation - focusActorLocation).Size();	//	Used for trimming results
 
 				if (!IsValid(focusableComponent) || !focusableComponent->IsFocusable() || (distanceToActorWhoIsFocusing > focusableComponent->GetFocusDistance()))
 				{
@@ -278,8 +350,7 @@ void UFocusComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 
 	UpdateFocusedActor();
 
-	bShowDebug = CVarShowFocusDebugs.GetValueOnGameThread() == 1 ? true:false;
-
+	bShowDebug = CVarShowFocusDebugs.GetValueOnGameThread() == 1 ? true : false;
 	if ((bShowDebug) && !FocusWorldLocation.IsZero())
 	{
 		DrawDebugs(DeltaTime);
