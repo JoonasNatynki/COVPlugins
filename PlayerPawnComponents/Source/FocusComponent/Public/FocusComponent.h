@@ -112,8 +112,7 @@ public:
 private:
 	const void DrawDebugs(float deltaTime);
 	const TArray<FHitResult> GetOverlappingActorsInFocusArea_Internal();
-	const TWeakObjectPtr<AActor> FindBestFocusCandidate_Internal(const TArray<FHitResult>& 
-	ValidHits);
+	const TWeakObjectPtr<AActor> FindBestFocusCandidate_Internal(const TArray<FHitResult>& ValidHits) const;
 	void UpdateFocusWorldLocation_Internal();
 
 	FHitResult CastCrossHairLineTrace(const AActor* Character, float RayDistance) const;

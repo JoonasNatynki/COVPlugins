@@ -275,8 +275,7 @@ const TArray<FHitResult> UFocusComponent::GetOverlappingActorsInFocusArea_Intern
 	return ValidHits;
 }
 
-const TWeakObjectPtr<AActor> UFocusComponent::FindBestFocusCandidate_Internal(const 
-TArray<FHitResult>& ValidHits) const
+const TWeakObjectPtr<AActor> UFocusComponent::FindBestFocusCandidate_Internal(const TArray<FHitResult>& ValidHits) const
 {
 	TWeakObjectPtr<AActor> Candidate;
 	float BestDistance = 99999.0f;
