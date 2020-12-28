@@ -2,9 +2,11 @@
 #include <GameFramework/Actor.h>
 #include <MemoryReader.h>
 
+DEFINE_LOG_CATEGORY(LogDespawnable)
+
 FDespawnableRecord UDespawnableSerializer::Write(AActor* Owner)
 {
-	UE_LOG(LogTemp, Error, TEXT("Creating respawn data for actor (%s)."), *GetNameSafe(Owner));
+	UE_LOG(LogDespawnable, Error, TEXT("Creating respawn data for actor (%s)."), *GetNameSafe(Owner));
 
 	ensure(IsValid(Owner));
 

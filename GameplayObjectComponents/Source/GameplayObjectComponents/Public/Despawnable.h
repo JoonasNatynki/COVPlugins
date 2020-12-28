@@ -10,6 +10,8 @@
 Grabbed from: https://forums.unrealengine.com/development-discussion/c-gameplay-programming/88477-spawning-actors-from-serialized-data
 */
 
+DECLARE_LOG_CATEGORY_EXTERN(LogDespawnable, Log, All)
+
 USTRUCT(BlueprintType, Blueprintable)
 struct FDespawnableRecord
 {
@@ -101,5 +103,4 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		void SerializeActor(UDespawnableSerializer* Serializer);
 
-public:
 };

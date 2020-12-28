@@ -22,6 +22,7 @@ public:
 class FAssetRegistryModule;
 class APlayerCameraManager;
 
+DECLARE_LOG_CATEGORY_EXTERN(LogUE4Helpers, Log, All)
 
 //	MACROS	#####################################################################################################################
 #define PRINT_FUNCTION *FString(__FUNCTION__).Append(":(").Append(FString::FormatAsNumber(__LINE__)).Append("): ")
@@ -154,7 +155,7 @@ public:
 		static bool IsOfType(const UObject* object, TSubclassOf<UObject> type);
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable, meta = (WorldContext = "WorldContextObject"))
-		static TArray<FVector> CalculateBarabolicTrajectory(const UObject* WorldContextObject, const FVector& startLocation, const FVector& velocity, const FVector& gravity, const float timeToSimulate, const int32 numberOfTrajectoryPoints);
+		static TArray<FVector> CalculateParabolicTrajectory(const UObject* WorldContextObject, const FVector& StartLocation, const FVector& Velocity, const FVector& Gravity, const float TimeToSimulate, const int32 NumberOfTrajectoryPoints);
 
 
 	static FString GetNetModeName(const UObject* worldContextObject);
@@ -169,14 +170,14 @@ public:
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable)
 		//	A more lightweight version of the GetAllChildClassesOfType. This will only search the classes that are already loaded in memory.
-		static TArray<UClass*> GetAllAssetsOfType(TSubclassOf<AActor> type, const FString& pathToSearchFor);
+		static TArray<UClass*> GetAllAssetsOfType(TSubclassOf<AActor> Type, const FString& PathToSearchFor);
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable)
 		//	Rotates a vector around a point
 		static FVector RotateVectorAroundPoint(const FVector& vectorToRotate, const FVector& pointToRotateAround, const FRotator& theRotationToApply);
 
 
-	static bool GenericIsArrayEmpty(void* targetArray, const FArrayProperty* arrayProp);
+	static bool GenericIsArrayEmpty(void* TargetArray, const FArrayProperty* ArrayProp);
 
 	DECLARE_FUNCTION(execIsArrayEmpty)
 	{

@@ -39,7 +39,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFocusedActorChanged, AActor*, New
 
 DECLARE_LOG_CATEGORY_EXTERN(LogFocus, Log, All)
 
-//	Component that casts either a ray from the camera or a more complex area focus mechanic to determine which object in the game world is being focused on.
+//	Component that casts either a ray from the camera or a more complex area focus mechanic to determine which object in the game world is being focused on by the player. This component can only be added to a pawn or a controller. No other types supported yet.
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent), Blueprintable, meta=(ShortTooltip = "Component used for focusing on objects.") )
 class FOCUSCOMPONENT_API UFocusComponent : public UActorComponent
 {
@@ -112,14 +112,15 @@ public:
 private:
 	const void DrawDebugs(float deltaTime);
 	const TArray<FHitResult> GetOverlappingActorsInFocusArea_Internal();
-	const TWeakObjectPtr<AActor> FindBestFocusCandidate_Internal(TArray<FHitResult> overlappingActors);
+	const TWeakObjectPtr<AActor> FindBestFocusCandidate_Internal(const TArray<FHitResult>& 
+	ValidHits);
 	void UpdateFocusWorldLocation_Internal();
 
-	FHitResult CastCrossHairLineTrace(const AActor* character, float rayDistance);
-	APlayerCameraManager* TryGetCameraManager(const APawn* pawn) const;
-	FVector GetFocusRayCastStartLocation_Internal();
-	FVector GetFocusRayCastEndLocation_Internal(const FVector& startLoc);
-	FHitResult SimpleTraceByChannel(const UObject* inObj, const FVector& startPos, const FVector& endPos, ECollisionChannel channel, const FName& TraceTag) const;
+	FHitResult CastCrossHairLineTrace(const AActor* Character, float RayDistance) const;
+	APlayerCameraManager* TryGetCameraManagerFromPawn_Internal(const APawn* Pawn) const;
+	const FVector GetFocusRayCastStartLocation_Internal() const;
+	const FVector GetFocusRayCastEndLocation_Internal(const FVector& StartLoc) const;
+	FHitResult SimpleTraceByChannel(const UObject* InObj, const FVector& StartPos, const FVector& EndPos, ECollisionChannel Channel, const FName& TraceTag) const;
 	AActor* TryGetCameraManagerActor_Internal() const;
 	APlayerController* TryGetPlayerController() const;
 	APawn* TryGetPlayerPawn() const;
@@ -131,30 +132,31 @@ FVector UFocusComponent::GetFocusWorldLocation() const
 	return FocusWorldLocation;
 }
 
-FORCEINLINE FHitResult UFocusComponent::SimpleTraceByChannel(const UObject* inObj, const FVector& startPos, const FVector& endPos, ECollisionChannel channel, const FName& TraceTag) const
+FORCEINLINE FHitResult UFocusComponent::SimpleTraceByChannel(const UObject* InObj, const FVector& StartPos, const FVector& EndPos, ECollisionChannel Channel, const FName& TraceTag) const
 {
 	FCollisionQueryParams RV_TraceParams = FCollisionQueryParams(TraceTag, false);
 	RV_TraceParams.bTraceComplex = true;
 	RV_TraceParams.bReturnPhysicalMaterial = false;
-	RV_TraceParams.AddIgnoredActor(Cast<AActor>(inObj));
+	RV_TraceParams.AddIgnoredActor(Cast<AActor>(InObj));
 	RV_TraceParams.TraceTag = TraceTag;
 
 	//Re-initialize hit info
 	FHitResult RV_Hit(ForceInit);
 
 	//call GetWorld() from within an actor extending class
-	bool blockingHit = inObj->GetWorld()->LineTraceSingleByChannel
+	bool blockingHit = InObj->GetWorld()->LineTraceSingleByChannel
 	(
 		RV_Hit,
-		startPos,
-		endPos,
-		channel,
+		StartPos,
+		EndPos,
+		Channel,
 		RV_TraceParams
 	);
 	return RV_Hit;
 }
 
-FORCEINLINE FHitResult UFocusComponent::CastCrossHairLineTrace(const AActor* Character, float RayDistance)
+FORCEINLINE FHitResult UFocusComponent::CastCrossHairLineTrace(const AActor* Character, float 
+RayDistance) const
 {
 	FHitResult RV_Hit(ForceInit);
 

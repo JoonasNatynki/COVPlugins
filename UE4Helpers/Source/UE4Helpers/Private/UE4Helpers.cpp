@@ -19,6 +19,8 @@
 
 #define LOCTEXT_NAMESPACE "UE4CodeHelpers"
 
+DEFINE_LOG_CATEGORY(LogUE4Helpers)
+
 void FUE4HelpersModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
@@ -51,76 +53,76 @@ bool UE4CodeHelpers::IsOfType(const UObject* object, TSubclassOf<UObject> type)
 	return object->IsA(type);
 }
 
-TArray<FVector> UE4CodeHelpers::CalculateBarabolicTrajectory(const UObject* WorldContextObject, const FVector& startLocation, const FVector& velocity, const FVector& gravity, const float timeToSimulate, const int32 numberOfTrajectoryPoints)
+TArray<FVector> UE4CodeHelpers::CalculateParabolicTrajectory(const UObject* WorldContextObject, const FVector& StartLocation, const FVector& Velocity, const FVector& Gravity, const float TimeToSimulate, const int32 NumberOfTrajectoryPoints)
 {
-	TArray<FVector> trajectoryPathPoints;
-	float velocityFloat = velocity.Size();
-	for (int x = 0; x < numberOfTrajectoryPoints; x++)
+	TArray<FVector> TrajectoryPathPoints;
+	float velocityFloat = Velocity.Size();
+	for (int x = 0; x < NumberOfTrajectoryPoints; x++)
 	{
-		FVector tempPoint;
-		FVector offset;
-		float time;
+		FVector TempPoint;
+		FVector Offset;
 		//  First point, no calculation
 		if (x == 0)
 		{
-			tempPoint = startLocation;
-			trajectoryPathPoints.Add(tempPoint);
+			TempPoint = StartLocation;
+			TrajectoryPathPoints.Add(TempPoint);
 		}
 		else
 		{
-			time = (timeToSimulate / numberOfTrajectoryPoints) * (x);
-			offset = (gravity * (time * time));
-			tempPoint = (startLocation + (velocity * time)) + offset;
-			trajectoryPathPoints.Add(tempPoint);
+			const float Time = (TimeToSimulate / NumberOfTrajectoryPoints) * (x);
+			Offset = (Gravity * (Time * Time));
+			TempPoint = (StartLocation + (Velocity * Time)) + Offset;
+			TrajectoryPathPoints.Add(TempPoint);
 		}
 		if (CVarShowBarabolicTrajectoryCalculationDebugLine.GetValueOnGameThread() == 1)
 		{
 			//  Draw the sample points
-			UKismetSystemLibrary::DrawDebugPoint(WorldContextObject->GetWorld(), tempPoint, 15.0f, FLinearColor::Red, 10.0f);
+			UKismetSystemLibrary::DrawDebugPoint(WorldContextObject->GetWorld(), TempPoint, 15.0f, FLinearColor::Red, 10.0f);
 			//  Draw lines between points
 			if ((x > 0))
 			{
-				UKismetSystemLibrary::DrawDebugLine(WorldContextObject->GetWorld(), tempPoint, trajectoryPathPoints[x - 1], FLinearColor::Green, 10.0f, 5.0f);
+				UKismetSystemLibrary::DrawDebugLine(WorldContextObject->GetWorld(), TempPoint, TrajectoryPathPoints[x - 1], FLinearColor::Green, 10.0f, 5.0f);
 			}
 		}
 	}
-	return trajectoryPathPoints;
+	return TrajectoryPathPoints;
 }
 
 FString UE4CodeHelpers::GetFileLine(const FString& InFileName, const FString& Folder, const FString& ConfigName)
 {
-	TArray<FString> rows;
-	FString filePath = FString(FPaths::ProjectDir()).Append(Folder).Append(InFileName);
-	bool foundSomething = FFileHelper::LoadFileToStringArray(rows, *filePath);
+	TArray<FString> Rows;
+	const FString FilePath = FString(FPaths::ProjectDir()).Append(Folder).Append(InFileName);
+	const bool FoundSomething = FFileHelper::LoadFileToStringArray(Rows, *FilePath);
 
-	if (foundSomething)
+	if (ensure(FoundSomething))
 	{
-		UE_LOG(LogTemp, Log, TEXT("Found a file with the name (%s). Processing words to locate the setting for configuration (%s)."), *InFileName, *ConfigName);
+		UE_LOG(LogUE4Helpers, Log, TEXT("Found a file with the name (%s). Processing words to locate the setting for configuration (%s)."), *InFileName, *ConfigName);
 
-		for (auto & row : rows)
+		for (auto&& Row : Rows)
 		{
-			bool containsString = row.Contains(ConfigName, ESearchCase::IgnoreCase, ESearchDir::FromStart);
+			const bool ContainsString = Row.Contains(ConfigName, ESearchCase::IgnoreCase, 
+			ESearchDir::FromStart);
 
-			if (containsString)
+			if (ContainsString)
 			{
-				TArray<FString> parsedLine;
-				row.ParseIntoArray(parsedLine, TEXT("="), true);
-				int32 parsedArrayLength = parsedLine.Num();
-				FString valueFound = parsedLine[parsedArrayLength - 1];
+				TArray<FString> ParsedLine;
+				Row.ParseIntoArray(ParsedLine, TEXT("="), true);
+				const int32 ParsedArrayLength = ParsedLine.Num();
+				FString& ValueFound = ParsedLine[ParsedArrayLength - 1];
 				//	Remove spaces if any
-				valueFound.RemoveFromStart(TEXT(" "));
+				ValueFound.RemoveFromStart(" ");
 
-				UE_LOG(LogTemp, Log, TEXT("Configuration (%s) found with the value of (%s)"), *ConfigName, *valueFound);
-				return parsedLine[parsedArrayLength - 1];
+				UE_LOG(LogUE4Helpers, Log, TEXT("Configuration (%s) found with the value of (%s)"), *ConfigName, *ValueFound);
+				return ParsedLine[ParsedArrayLength - 1];
 			}
 		}
-		UE_LOG(LogTemp, Error, TEXT("No line (%s) was found´in the config file (%s)."), *ConfigName, *InFileName);
+		UE_LOG(LogUE4Helpers, Error, TEXT("No line (%s) was foundï¿½in the config file (%s)."), *ConfigName, *InFileName);
 
 		return FString(TEXT(""));
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("Did not find a file named (%s)."), *InFileName);
+		UE_LOG(LogUE4Helpers, Error, TEXT("Did not find a file named (%s)."), *InFileName);
 		FMessageLog("PIE").Error(FText::Format(LOCTEXT("COVBlueprintFunctionLibrary", "Could not find a file named ({0})."), FText::FromString(InFileName)));
 		return FString(TEXT(""));
 	}
@@ -133,19 +135,18 @@ FString UE4CodeHelpers::GetConfigFileLine(const FString& InFileName, const FStri
 
 int32 UE4CodeHelpers::GetNumberOfRowsInFile(const FString& InFileName, const FString& Folder)
 {
-	int32 rowCount;
-	TArray<FString> rows;
-	FString filePath = FString(FPaths::ProjectDir()).Append(Folder).Append(InFileName);
-	bool foundSomething = FFileHelper::LoadANSITextFileToStrings(*filePath, NULL, rows);
+	TArray<FString> Rows;
+	const FString FilePath = FString(FPaths::ProjectDir()).Append(Folder).Append(InFileName);
+	const bool FoundSomething = FFileHelper::LoadANSITextFileToStrings(*FilePath, nullptr, Rows);
 
-	if (foundSomething)
+	if (FoundSomething)
 	{
-		rowCount = rows.Num();
-		UE_LOG(LogTemp, Log, TEXT("Found a number of (%d) rows in the file (%s)."), rowCount, *InFileName);
-		return rowCount;
+		const int32 RowCount = Rows.Num();
+		UE_LOG(LogUE4Helpers, Log, TEXT("Found a number of (%d) rows in the file (%s)."), RowCount, *InFileName);
+		return RowCount;
 	}
 
-	UE_LOG(LogTemp, Error, TEXT("Could not read the number of lines in a file (%s). No file found!"), *InFileName);
+	UE_LOG(LogUE4Helpers, Error, TEXT("Could not read the number of lines in a file (%s). No file found!"), *InFileName);
 	FMessageLog("PIE").Error(FText::Format(LOCTEXT("UE4CodeHelpers", "Could not read the number of lines in a file ({0}). No file found!."), FText::FromString(InFileName)));
 
 	return -1;
@@ -153,16 +154,17 @@ int32 UE4CodeHelpers::GetNumberOfRowsInFile(const FString& InFileName, const FSt
 
 int32 UE4CodeHelpers::GetRepositoryCommitCount()
 {
-	int32 numberOfCommits = (int32)GetNumberOfRowsInFile(FString(TEXT("HEAD")), FString(TEXT("/.git/logs/")));
+	const int32& NumberOfCommits = static_cast<int32>(GetNumberOfRowsInFile(FString(TEXT("HEAD")),
+	FString(TEXT("/.git/logs/"))));
 
-	if (numberOfCommits == -1)
+	if (NumberOfCommits == -1)
 	{
-		UE_LOG(LogTemp, Error, TEXT("No git repository folder found. Could not find the number of commits."));
+		UE_LOG(LogUE4Helpers, Error, TEXT("No git repository folder found. Could not find the number of commits."));
 		FMessageLog("PIE").Error(FText::FromString("No git repository folder found. Could not find the number of commits."));
 		return -1;
 	}
 
-	return numberOfCommits;
+	return NumberOfCommits;
 }
 
 APlayerCameraManager* UE4CodeHelpers::TryGetPawnCameraManager(const APawn* pawn)
@@ -252,28 +254,28 @@ FRotator UE4CodeHelpers::OrientRotationToNormalVector(const FRotator& CurrentRot
 	return NewQuat.Rotator();
 }
 
-TArray<UClass*> UE4CodeHelpers::GetAllAssetsOfType(TSubclassOf<AActor> type, const FString& pathToSearchFor)
+TArray<UClass*> UE4CodeHelpers::GetAllAssetsOfType(TSubclassOf<AActor> Type, const FString& PathToSearchFor)
 {
-	UE_LOG(LogTemp, Log, TEXT("Getting all assets of type (%s) from path('%s')."), *GetNameSafe(type->GetClass()), *pathToSearchFor);
+	UE_LOG(LogUE4Helpers, Log, TEXT("Getting all assets of type (%s) from path('%s')."), *GetNameSafe(Type->GetClass()), *PathToSearchFor);
 
 	TArray<UClass*> Into;
 
-	auto items = UObjectLibrary::CreateLibrary(type, true, GIsEditor);
-	items->AddToRoot();
-	items->LoadBlueprintsFromPath(pathToSearchFor);
+	UObjectLibrary* Items = UObjectLibrary::CreateLibrary(Type, true, GIsEditor);
+	Items->AddToRoot();
+	Items->LoadBlueprintsFromPath(PathToSearchFor);
 
 	TArray<UBlueprintGeneratedClass*> classes;
-	items->GetObjects<UBlueprintGeneratedClass>(classes);
+	Items->GetObjects<UBlueprintGeneratedClass>(classes);
 
 	for (int32 i = 0; i < classes.Num(); ++i) {
 		UBlueprintGeneratedClass* item = classes[i];
-		FString name = item->GetName();
-		FString path = item->GetPathName();
+		const FString& Name = item->GetName();
+		const FString& Path = item->GetPathName();
 
 		//skip editor debug stuff...
-		if (name.StartsWith(TEXT("SKEL_"))) continue;
+		if (Name.StartsWith(TEXT("SKEL_"))) continue;
 
-		UE_LOG(LogTemp, Warning, TEXT("- found / `%s` / in `%s`"), *name, *path);
+		UE_LOG(LogUE4Helpers, Warning, TEXT("- found / `%s` / in `%s`"), *Name, *Path);
 
 		//:note: you can use ContainsByPredicate instead for more nuance
 		Into.AddUnique(item);
@@ -292,13 +294,13 @@ FVector UE4CodeHelpers::RotateVectorAroundPoint(const FVector& vectorToRotate, c
 	return translatedVector;
 }
 
-bool UE4CodeHelpers::GenericIsArrayEmpty(void* targetArray, const UArrayProperty* arrayProp)
+bool UE4CodeHelpers::GenericIsArrayEmpty(void* TargetArray, const UArrayProperty* ArrayProp)
 {
-	if (targetArray)
+	if (TargetArray)
 	{
-		FScriptArrayHelper arrayHelper(arrayProp, targetArray);
+		const FScriptArrayHelper ArrayHelper(ArrayProp, TargetArray);
 
-		if (arrayHelper.Num() == 0)
+		if (ArrayHelper.Num() == 0)
 		{
 			return true;
 		}
