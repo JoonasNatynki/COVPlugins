@@ -8,6 +8,8 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogFocusable, All, Log)
 
+//	A component meant for actors that are supposed to be focusable by a player. See FocusComponent.h for more information on how this component is used
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FOCUSCOMPONENT_API UFocusableComponent : public UActorComponent
 {
@@ -17,7 +19,7 @@ public:
 	// Sets default values for this component's properties
 	UFocusableComponent();
 
-	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty, FDefaultAllocator>& OutLifetimeProps) const;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty, FDefaultAllocator>& OutLifetimeProps) const override;
 
 	UFUNCTION(Category = "Focusable", BlueprintCallable, BlueprintPure)
 		FORCEINLINE bool IsFocusable() const;
@@ -28,11 +30,12 @@ public:
 	UFUNCTION(Category = "Focusable", BlueprintCallable)
 		void SetIsFocusable(bool bIsFocusable);
 
+private:
 	UPROPERTY(Category = "Focusable", EditDefaultsOnly, Replicated)
 		bool bCanBeFocusedAt = true;
 
 	UPROPERTY(Category = "Focusable", EditDefaultsOnly)
-		//	The maximum distance this focusable can be focused at maximum
+		//	The maximum distance this focusable can be focused at maximum by the actor (controlled pawn) that is doing the focusing.
 		float FocusDistance = 300.0f;
 
 
