@@ -10,6 +10,10 @@
 #include <GameFramework/Pawn.h>
 #include <UObjectToken.h>
 
+#include "EngineUtils.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/Character.h"
+
 #define LOCTEXT_NAMESPACE "FFocusComponentModule"
 
 void FFocusComponentModule::StartupModule()
@@ -101,7 +105,7 @@ const FVector UFocusComponent::GetFocusRayCastEndLocation_Internal(const FVector
 			{
 				//	end point target direction
 				const FVector& StartLocation = OwnerCameraManagerActor->GetActorLocation();
-				EndLoc = StartLocation + (OwnerCameraManagerActor->GetActorForwardVector() * FocusingMaxDistance);
+				EndLoc = StartLocation + (OwnerCameraManagerActor->GetActorForwardVector() * FocusInternalMaxLimit);
 				break;
 			}
 		case(EFocusMethod::MouseScreenPosition):
@@ -110,14 +114,14 @@ const FVector UFocusComponent::GetFocusRayCastEndLocation_Internal(const FVector
 				FVector WorldLocation;
 				FVector WorldDirection;
 				PlayerController->DeprojectMousePositionToWorld(WorldLocation, WorldDirection);
-				EndLoc = WorldLocation + (WorldDirection * FocusingMaxDistance);
+				EndLoc = WorldLocation + (WorldDirection * FocusInternalMaxLimit);
 				break;
 			}
 		}
 	}
 	else
 	{
-		EndLoc = StartLoc + (GetOwner()->GetActorForwardVector() * FocusingMaxDistance);
+		EndLoc = StartLoc + (GetOwner()->GetActorForwardVector() * FocusInternalMaxLimit);
 	}
 
 	return EndLoc;
@@ -191,6 +195,11 @@ const FVector UFocusComponent::GetFocusDistanceRelativeLocation() const
 		{
 			return TryGetCameraManagerActor_Internal()->GetActorLocation();
 		}
+		case(EFocusDistanceRelativeTo::PlayerPawnCapsuleBottom):
+		{
+			const APawn* Pawn = TryGetPlayerPawn();
+			return Pawn->GetActorLocation() - FVector(0,0,Cast<ACharacter>(Pawn)->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+		}
 	}
 
 	return FVector::ZeroVector;
@@ -240,8 +249,31 @@ void UFocusComponent::UpdateFocusedActor()
 
 const void UFocusComponent::DrawDebugs(float deltaTime)
 {
-	DrawDebugSphere(GetWorld(), CastCrossHairLineTrace(GetOwner(), FocusingMaxDistance).ImpactPoint, 5.0f, 4, FColor::Magenta, false, -1.0f, 0, 2.0f);
-	DrawDebugSphere(GetWorld(), CastCrossHairLineTrace(GetOwner(), FocusingMaxDistance).ImpactPoint, FocusingRadiusExtent, 16, FColor::Cyan, false, -1.0f, 0, 2.0f);
+	const FVector& FocusingSourceLocation = GetFocusDistanceRelativeLocation();
+	UWorld* World = GetWorld();
+	//	Focus location crosshair
+	DrawDebugCrosshairs(World, FocusWorldLocation, FRotator::ZeroRotator,50.0f, FColor::Red, false, -1.0f, 0);
+	DrawDebugCrosshairs(World, FocusingSourceLocation, FRotator::ZeroRotator,50.0f, FColor::Red, false, -1.0f, 0);	
+	//	Focusing point and its reach radius
+	DrawDebugSphere(World, FocusWorldLocation, FocusingRadiusExtent, 16, FColor::Cyan, false, -1.0f, 0, 1.0f);
+	//	The focusing source reach location
+	DrawDebugSphere(World, FocusingSourceLocation, FocusingMaxDistance, 16, FColor::Cyan, false, -1.0f, 0, 1.0f);
+
+	//	Line and distance from focus source to focus world location
+	DrawDebugLine(World, FocusingSourceLocation, FocusWorldLocation, FColor::Red, false, -1.0f, 0, 1.0f);
+	const FVector TextLocation = FocusingSourceLocation + ((FocusWorldLocation-FocusingSourceLocation)/2);
+	DrawDebugString(World, TextLocation, FString::SanitizeFloat((FocusWorldLocation-FocusingSourceLocation).Size()), nullptr, FColor::Red, deltaTime, true, 1);
+	
+	//	Draw every focusable actor possible focus reach radius
+	for(FActorIterator ActorIter(World); ActorIter; ++ActorIter)
+	{
+		if(UFocusableComponent* FocusComp = ActorIter->FindComponentByClass<UFocusableComponent>())
+		{
+			const FColor Colori = ((FocusingSourceLocation-ActorIter->GetActorLocation()).Size() <= FocusComp->GetFocusDistance())?(FColor::Green):(FColor::Red);
+			DrawDebugLine(World, ActorIter->GetActorLocation(), ActorIter->GetActorLocation()+ FVector(0,0, FocusComp->GetFocusDistance()), Colori, false, -1.0f, 0, 2.0f);
+			DrawDebugSphere(World, ActorIter->GetActorLocation(), FocusComp->GetFocusDistance(), 6, Colori, false, -1.0f, 0, 1.0f);
+		}
+	}
 }
 
 const TArray<FHitResult> UFocusComponent::GetOverlappingActorsInFocusArea_Internal()
@@ -254,7 +286,7 @@ const TArray<FHitResult> UFocusComponent::GetOverlappingActorsInFocusArea_Intern
 	const FVector& StartLoc = GetFocusRayCastStartLocation_Internal();
 	const FVector& EndLoc = GetFocusRayCastEndLocation_Internal(StartLoc);
 
-	const EDrawDebugTrace::Type DebugTrace = (bShowDebug) ? (EDrawDebugTrace::ForDuration) : 
+	const EDrawDebugTrace::Type DebugTrace = (false) ? (EDrawDebugTrace::ForDuration) : 
 	(EDrawDebugTrace::None);
 
 	UKismetSystemLibrary::SphereTraceMulti(this, StartLoc, EndLoc, FocusingRadiusExtent, UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel1), false, ActorsToIgnore, DebugTrace, Hits, true, FLinearColor::Red, FLinearColor::Green, GetWorld()->GetDeltaSeconds());
@@ -278,29 +310,25 @@ const TArray<FHitResult> UFocusComponent::GetOverlappingActorsInFocusArea_Intern
 const TWeakObjectPtr<AActor> UFocusComponent::FindBestFocusCandidate_Internal(const TArray<FHitResult>& ValidHits) const
 {
 	TWeakObjectPtr<AActor> Candidate;
-	float BestDistance = 99999.0f;
+	float BestDistance = FocusInternalMaxLimit;
 
 	for (auto&& Hit : ValidHits)
 	{
 		const FVector& FocusActorLocation = Hit.ImpactPoint;
 
-		//	If using the developer mode, ignore every setting and just focus on everything.
-		if (!bDeveloperMode)
+		//	Whether or not to only focus on actors with the FocusableComponent and if they are focusable or not
+		if (bFocusOnlyOnFocusables)
 		{
-			//	Whether or not to only focus on actors with the FocusableComponent and if they are focusable or not
-			if (bFocusOnlyOnFocusables)
-			{
-				const FVector& FocusRelativeLocation = GetFocusDistanceRelativeLocation();
-				const UFocusableComponent* FocusableComponent = Cast<UFocusableComponent>(Hit.Actor->GetComponentByClass(UFocusableComponent::StaticClass()));
-				const float DistanceToActorWhoIsFocusing = (FocusRelativeLocation - 
-				FocusActorLocation).Size();	//	Used for trimming results
+			const FVector& FocusRelativeLocation = GetFocusDistanceRelativeLocation();
+			const UFocusableComponent* FocusableComponent = Cast<UFocusableComponent>(Hit.Actor->GetComponentByClass(UFocusableComponent::StaticClass()));
+			const float DistanceToActorWhoIsFocusing = (FocusRelativeLocation - 
+			FocusActorLocation).Size();	//	Used for trimming results
 
-				if (!IsValid(FocusableComponent) || !FocusableComponent->IsFocusable() || (DistanceToActorWhoIsFocusing > FocusableComponent->GetFocusDistance()))
-				{
-					continue;
-				}
+			if (!IsValid(FocusableComponent) || !FocusableComponent->IsFocusable() || (DistanceToActorWhoIsFocusing > FocusableComponent->GetFocusDistance()))
+			{
+				continue;
 			}
-		}
+		}	
 
 		const FVector& FocusRayStartLocation = GetFocusRayCastStartLocation_Internal();
 		const FVector& FocusRayEndLocation = GetFocusRayCastEndLocation_Internal(FocusRayStartLocation);
@@ -330,8 +358,55 @@ const TWeakObjectPtr<AActor> UFocusComponent::FindBestFocusCandidate_Internal(co
 
 void UFocusComponent::UpdateFocusWorldLocation_Internal()
 {
-	const FHitResult& RV_Hit = CastCrossHairLineTrace(GetOwner(), FocusingMaxDistance);
+	const FHitResult& RV_Hit = CastCrossHairLineTrace(GetOwner(), FocusInternalMaxLimit);
 	FocusWorldLocation = RV_Hit.ImpactPoint;
+}
+
+FHitResult UFocusComponent::CastCrossHairLineTrace(const AActor* Character, float 
+RayDistance) const
+{
+	FHitResult RV_Hit(ForceInit);
+
+	const APlayerController* PlayerController = TryGetPlayerController();
+	const AActor* CameraManagerActor = TryGetCameraManagerActor_Internal();
+
+	if (ensure(IsValid(CameraManagerActor)))
+	{
+
+		//	Ray starting point
+		const FVector PlayerViewWorldLocation = CameraManagerActor->GetActorLocation();
+		FVector ControllerForwardVector;
+
+		switch (FocusMethod)
+		{
+		case(EFocusMethod::CameraDirection):
+			{
+				//	end point target direction
+				ControllerForwardVector = CameraManagerActor->GetActorForwardVector();
+				break;
+			}
+		case(EFocusMethod::MouseScreenPosition):
+			{
+				FVector WorldLocation;
+				FVector WorldDirection;
+				PlayerController->DeprojectMousePositionToWorld(WorldLocation, WorldDirection);
+				ControllerForwardVector = WorldDirection;
+			}
+		}
+
+		RV_Hit = SimpleTraceByChannel
+        (
+            Character,
+            PlayerViewWorldLocation,
+            PlayerViewWorldLocation + (ControllerForwardVector * RayDistance),
+            ECollisionChannel::ECC_Camera,
+            FName("AimTrace")
+        );
+
+		return RV_Hit;
+	}
+
+	return RV_Hit;
 }
 
 // Called every frame

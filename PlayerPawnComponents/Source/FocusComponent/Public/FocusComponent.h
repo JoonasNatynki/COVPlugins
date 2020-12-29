@@ -32,7 +32,8 @@ UENUM(BlueprintType)
 enum class EFocusDistanceRelativeTo : uint8
 {
 	PlayerPawn,
-	Camera
+	Camera,
+	PlayerPawnCapsuleBottom
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFocusedActorChanged, AActor*, NewFocusedActor);
@@ -50,37 +51,33 @@ public:
 	UFocusComponent();
 
 	UPROPERTY(BlueprintAssignable)
-		FOnFocusedActorChanged OnFocusedActorChanged;
+	FOnFocusedActorChanged OnFocusedActorChanged;
 
 	UPROPERTY(Category = "Focus", EditDefaultsOnly, BlueprintReadWrite)
-		EFocusMethod FocusMethod = EFocusMethod::CameraDirection;
+	EFocusMethod FocusMethod = EFocusMethod::CameraDirection;
 
 	UPROPERTY(Category = "Focus", EditDefaultsOnly, BlueprintReadWrite)
-		EFocusDistanceRelativeTo FocusDistanceMeasuredRelativeTo = EFocusDistanceRelativeTo::PlayerPawn;
+	EFocusDistanceRelativeTo FocusDistanceMeasuredRelativeTo = EFocusDistanceRelativeTo::PlayerPawn;
 
-	UPROPERTY(Category = "Focus", BlueprintReadOnly, VisibleAnywhere, Transient)
-		AActor* CachedFocusedActor;
+	UPROPERTY(Category = "Focus - Transient", BlueprintReadOnly, VisibleAnywhere, Transient)
+	AActor* CachedFocusedActor;
 
-	UPROPERTY(Category = "Focus", BlueprintReadOnly, VisibleAnywhere, Transient)
-		FVector FocusWorldLocation;
+	UPROPERTY(Category = "Focus - Transient", BlueprintReadOnly, Transient)
+	FVector FocusWorldLocation;
 
-	UPROPERTY(Category = "Focus", EditDefaultsOnly, BlueprintReadWrite)
-		float FocusingMaxDistance = 700.0f;
-
-	UPROPERTY(Category = "Focus", EditDefaultsOnly, BlueprintReadWrite)
-		//	If TRUE, you can focus on everything and on focusable things regardless of their set distance limits.
-		bool bDeveloperMode = false;
+	UPROPERTY(Category = "Focus", EditDefaultsOnly, BlueprintReadWrite, meta = (ClampMin = "0.0", ClampMax = "9999999.0"))
+	float FocusingMaxDistance = 700.0f;
 
 	UPROPERTY(Category = "Focus", EditDefaultsOnly, BlueprintReadWrite)
-		//	How far away from the focusing center line can actors be focused at. Used in focusing on objects that are not directly being focused at
-		float FocusingRadiusExtent = 50.0f;
+	//	How far away from the focusing center line can actors be focused at. Used in focusing on objects that are not directly being focused at
+	float FocusingRadiusExtent = 50.0f;
 
-	UPROPERTY(Category = "Debug", EditDefaultsOnly, BlueprintReadWrite)
-		//	Whether to ignore all other actors but the ones with the FocusableComponent
-		bool bFocusOnlyOnFocusables = true;
+	UPROPERTY(Category = "Focus - Debug", EditDefaultsOnly, BlueprintReadWrite)
+	//	Whether to ignore all other actors but the ones with the FocusableComponent
+	bool bFocusOnlyOnFocusables = true;
 
-	UPROPERTY(Category = "Debug", EditDefaultsOnly, BlueprintReadWrite)
-		bool bShowDebug = false;
+	UPROPERTY()
+	bool bShowDebug = false;
 
 
 	//	Internal implementation of the updating logic
@@ -94,19 +91,22 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(Category = "Focus", BlueprintCallable, BlueprintPure)
-		//	Gets and updates the focused actor.
-		AActor* GetFocusedActor();
+	//	Gets and updates the focused actor.
+	AActor* GetFocusedActor();
+
 	UFUNCTION(Category = "Focus", BlueprintCallable, BlueprintPure)
-		//	Gets the cached focused actor from the last time the focus actor was updated.
-		AActor* GetCachedFocusedActor() const;
+	//	Gets the cached focused actor from the last time the focus actor was updated.
+	AActor* GetCachedFocusedActor() const;
+
 	UFUNCTION(Category = "Focus", BlueprintCallable, BlueprintPure)
-		FORCEINLINE FVector GetFocusWorldLocation() const;
+	FORCEINLINE FVector GetFocusWorldLocation() const;
 
 	UFUNCTION(Category = "Focus", BlueprintCallable)
-		//	Goes through the logic of how the focus actor is determined and updates the cached focused actor variable.
-		void UpdateFocusedActor();
+	//	Goes through the logic of how the focus actor is determined and updates the cached focused actor variable.
+	void UpdateFocusedActor();
+
 	UFUNCTION(Category = "Focus", BlueprintCallable)
-		void SetFocusedActor(AActor* newFocus) { CachedFocusedActor = newFocus; };
+	void SetFocusedActor(AActor* NewFocus) { CachedFocusedActor = NewFocus; };
 	
 
 private:
@@ -124,6 +124,8 @@ private:
 	APlayerController* TryGetPlayerController() const;
 	APawn* TryGetPlayerPawn() const;
 	const FVector GetFocusDistanceRelativeLocation() const;
+
+	float FocusInternalMaxLimit = 99999999.0f;
 };
 
 FVector UFocusComponent::GetFocusWorldLocation() const
@@ -151,52 +153,5 @@ FORCEINLINE FHitResult UFocusComponent::SimpleTraceByChannel(const UObject* InOb
 		Channel,
 		RV_TraceParams
 	);
-	return RV_Hit;
-}
-
-FORCEINLINE FHitResult UFocusComponent::CastCrossHairLineTrace(const AActor* Character, float 
-RayDistance) const
-{
-	FHitResult RV_Hit(ForceInit);
-
-	const APlayerController* PlayerController = TryGetPlayerController();
-	const AActor* CameraManagerActor = TryGetCameraManagerActor_Internal();
-
-	if (ensure(IsValid(CameraManagerActor)))
-	{
-
-		//	Ray starting point
-		const FVector PlayerViewWorldLocation = CameraManagerActor->GetActorLocation();
-		FVector ControllerForwardVector;
-
-		switch (FocusMethod)
-		{
-		case(EFocusMethod::CameraDirection):
-			{
-				//	end point target direction
-				ControllerForwardVector = CameraManagerActor->GetActorForwardVector();
-				break;
-			}
-		case(EFocusMethod::MouseScreenPosition):
-			{
-				FVector WorldLocation;
-				FVector WorldDirection;
-				PlayerController->DeprojectMousePositionToWorld(WorldLocation, WorldDirection);
-				ControllerForwardVector = PlayerViewWorldLocation + (PlayerViewWorldLocation + (WorldDirection));
-			}
-		}
-
-		RV_Hit = SimpleTraceByChannel
-		(
-			Character,
-			PlayerViewWorldLocation + (ControllerForwardVector),
-			PlayerViewWorldLocation + (ControllerForwardVector * RayDistance),
-			ECollisionChannel::ECC_Camera,
-			FName("AimTrace")
-		);
-
-		return RV_Hit;
-	}
-
 	return RV_Hit;
 }
