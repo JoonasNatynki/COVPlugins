@@ -19,22 +19,24 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty, F
 	DOREPLIFETIME(UInventoryComponent, Inventory);
 }
 
-void UInventoryComponent::TransferInventoryDataToObject(UObject* fromObject, UObject* toObject) const
+void UInventoryComponent::TransferInventoryDataToObject(UObject* FromObject, UObject* ToObject) const
 {
-	ensure(IsValid(fromObject) && IsValid(toObject));
+	ensure(IsValid(FromObject) && IsValid(ToObject));
 
 	//	Go through each property in the class
-	for (TFieldIterator<FProperty> property_1(fromObject->GetClass()); property_1; ++property_1)
+	for (TFieldIterator<FProperty> property_1(FromObject->GetClass()); property_1; ++property_1)
 	{
 		//	Now go through every property in the other object and see if there is a matching one
-		for (TFieldIterator<FProperty> property_2(toObject->GetClass()); property_2; ++property_2)
+		for (TFieldIterator<FProperty> property_2(ToObject->GetClass()); property_2; ++property_2)
 		{
 			//	Check that both have matching types and matching names
-			if (property_1->SameType(*property_2) && (property_1->GetFName() == property_2->GetFName()))
+			const bool bNamesAndTypesMatch = property_1->SameType(*property_2) && (property_1->GetFName() == property_2->GetFName());
+
+			if (bNamesAndTypesMatch)
 			{
-				UE_LOG(LogInventory, Log, TEXT("Copying (%s)(%s) property from (%s) to (%s)"), *property_1->GetCPPType(), *property_1->GetFName().ToString(), *GetNameSafe(fromObject), *GetNameSafe(toObject));
-				void* theData = property_1->ContainerPtrToValuePtr<void>(fromObject);
-				void* destinationData = property_2->ContainerPtrToValuePtr<void>(toObject);
+				UE_LOG(LogInventory, Verbose, TEXT("Copying (%s)(%s) property from (%s) to (%s)"), *property_1->GetCPPType(), *property_1->GetFName().ToString(), *GetNameSafe(FromObject), *GetNameSafe(ToObject));
+				void* theData = property_1->ContainerPtrToValuePtr<void>(FromObject);
+				void* destinationData = property_2->ContainerPtrToValuePtr<void>(ToObject);
 				property_1->CopySingleValue(destinationData, theData);
 
 				break;
@@ -89,7 +91,7 @@ bool UInventoryComponent::AddItem(AActor* ItemActor)
 				Inventory.Add(SpawnedActor);
 				OnRep_Inventory();
 			}
-
+			
 			//	Maybe destroy the original item now?
 			ItemActor->Destroy();
 
@@ -100,7 +102,7 @@ bool UInventoryComponent::AddItem(AActor* ItemActor)
 	return false;
 }
 
-bool UInventoryComponent::RemoveItem(AActor* item)
+bool UInventoryComponent::RemoveItem(AActor* Item)
 {
 	return false;
 }
