@@ -34,7 +34,7 @@ private:
 	UPROPERTY(Category = "Focusable", EditDefaultsOnly, Replicated)
 		bool bCanBeFocusedAt = true;
 
-	UPROPERTY(Category = "Focusable", EditDefaultsOnly)
+	UPROPERTY(Category = "Focusable", EditAnywhere)
 		//	The maximum distance this focusable can be focused at maximum by the actor (controlled pawn) that is doing the focusing.
 		float FocusDistance = 300.0f;
 

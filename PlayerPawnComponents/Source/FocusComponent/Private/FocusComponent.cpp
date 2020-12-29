@@ -257,21 +257,22 @@ const void UFocusComponent::DrawDebugs(float deltaTime)
 	//	Focusing point and its reach radius
 	DrawDebugSphere(World, FocusWorldLocation, FocusingRadiusExtent, 16, FColor::Cyan, false, -1.0f, 0, 1.0f);
 	//	The focusing source reach location
-	DrawDebugSphere(World, FocusingSourceLocation, FocusingMaxDistance, 16, FColor::Cyan, false, -1.0f, 0, 1.0f);
+	//DrawDebugSphere(World, FocusingSourceLocation, FocusingMaxDistance, 16, FColor::Cyan, false, -1.0f, 0, 1.0f);
 
 	//	Line and distance from focus source to focus world location
-	DrawDebugLine(World, FocusingSourceLocation, FocusWorldLocation, FColor::Red, false, -1.0f, 0, 1.0f);
+	const FColor ColorOfFocusSourceReachDistance = ((FocusingSourceLocation-FocusWorldLocation).Size() <= FocusingMaxDistance)?(FColor::Green):(FColor::Red);
+	DrawDebugLine(World, FocusingSourceLocation, FocusWorldLocation, ColorOfFocusSourceReachDistance, false, -1.0f, 0, 1.0f);
 	const FVector TextLocation = FocusingSourceLocation + ((FocusWorldLocation-FocusingSourceLocation)/2);
-	DrawDebugString(World, TextLocation, FString::SanitizeFloat((FocusWorldLocation-FocusingSourceLocation).Size()), nullptr, FColor::Red, deltaTime, true, 1);
+	DrawDebugString(World, TextLocation, FString::SanitizeFloat((FocusWorldLocation-FocusingSourceLocation).Size()), nullptr, ColorOfFocusSourceReachDistance, deltaTime, true, 1);
 	
 	//	Draw every focusable actor possible focus reach radius
 	for(FActorIterator ActorIter(World); ActorIter; ++ActorIter)
 	{
 		if(UFocusableComponent* FocusComp = ActorIter->FindComponentByClass<UFocusableComponent>())
 		{
-			const FColor Colori = ((FocusingSourceLocation-ActorIter->GetActorLocation()).Size() <= FocusComp->GetFocusDistance())?(FColor::Green):(FColor::Red);
-			DrawDebugLine(World, ActorIter->GetActorLocation(), ActorIter->GetActorLocation()+ FVector(0,0, FocusComp->GetFocusDistance()), Colori, false, -1.0f, 0, 2.0f);
-			DrawDebugSphere(World, ActorIter->GetActorLocation(), FocusComp->GetFocusDistance(), 6, Colori, false, -1.0f, 0, 1.0f);
+			const FColor ColorOfFocusableReachRadius = ((FocusingSourceLocation-ActorIter->GetActorLocation()).Size() <= FocusComp->GetFocusDistance())?(FColor::Green):(FColor::Red);
+			DrawDebugLine(World, ActorIter->GetActorLocation(), ActorIter->GetActorLocation()+ FVector(0,0, FocusComp->GetFocusDistance()), ColorOfFocusableReachRadius, false, -1.0f, 0, 2.0f);
+			DrawDebugSphere(World, ActorIter->GetActorLocation(), FocusComp->GetFocusDistance(), 6, ColorOfFocusableReachRadius, false, -1.0f, 0, 1.0f);
 		}
 	}
 }
@@ -319,12 +320,11 @@ const TWeakObjectPtr<AActor> UFocusComponent::FindBestFocusCandidate_Internal(co
 		//	Whether or not to only focus on actors with the FocusableComponent and if they are focusable or not
 		if (bFocusOnlyOnFocusables)
 		{
-			const FVector& FocusRelativeLocation = GetFocusDistanceRelativeLocation();
+			const FVector& FocusSourceLocation = GetFocusDistanceRelativeLocation();
 			const UFocusableComponent* FocusableComponent = Cast<UFocusableComponent>(Hit.Actor->GetComponentByClass(UFocusableComponent::StaticClass()));
-			const float DistanceToActorWhoIsFocusing = (FocusRelativeLocation - 
-			FocusActorLocation).Size();	//	Used for trimming results
+			const float DistanceToActorWhoIsFocusing = (FocusSourceLocation - FocusActorLocation).Size();	//	Used for trimming results
 
-			if (!IsValid(FocusableComponent) || !FocusableComponent->IsFocusable() || (DistanceToActorWhoIsFocusing > FocusableComponent->GetFocusDistance()))
+			if (!IsValid(FocusableComponent) || !FocusableComponent->IsFocusable() || (DistanceToActorWhoIsFocusing > FocusableComponent->GetFocusDistance()) || (DistanceToActorWhoIsFocusing > FocusingMaxDistance))
 			{
 				continue;
 			}
