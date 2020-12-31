@@ -29,14 +29,15 @@ void UInventoryComponent::TransferInventoryDataToObject(UObject* FromObject, UOb
 	//	Go through each property in the class
 	for (TFieldIterator<FProperty> Property_1(FromObject->GetClass()); Property_1; ++Property_1)
 	{
+		
+		if(ShouldIgnoreBaseClassPropertyCopy(**Property_1))
+		{
+			continue;
+		}
+		
 		//	Now go through every property in the other object and see if there is a matching one
 		for (TFieldIterator<FProperty> property_2(ToObject->GetClass()); property_2; ++property_2)
-		{
-			if(ShouldIgnoreBaseClassPropertyCopy(**Property_1))
-			{
-				continue;
-			}
-			
+		{			
 			//	Check that both have matching types and matching names
 			const bool bNamesAndTypesMatch = Property_1->SameType(*property_2) && (Property_1->GetFName() == property_2->GetFName());
 
