@@ -3,6 +3,11 @@
 #include <UnrealNetwork.h>
 #include <Classes/Kismet/GameplayStatics.h>
 
+
+#include "CollectibleItemBase.h"
+#include "InventoryItemBase.h"
+#include "PropertyExchangableItemBase.h"
+
 DEFINE_LOG_CATEGORY(LogInventory)
 
 void UInventoryComponent::BeginPlay()
@@ -29,6 +34,11 @@ void UInventoryComponent::TransferInventoryDataToObject(UObject* FromObject, UOb
 		//	Now go through every property in the other object and see if there is a matching one
 		for (TFieldIterator<FProperty> property_2(ToObject->GetClass()); property_2; ++property_2)
 		{
+			if(ShouldIgnorePropertyCopy(**property_1, **property_2))
+			{
+				continue;
+			}
+			
 			//	Check that both have matching types and matching names
 			const bool bNamesAndTypesMatch = property_1->SameType(*property_2) && (property_1->GetFName() == property_2->GetFName());
 
@@ -45,7 +55,25 @@ void UInventoryComponent::TransferInventoryDataToObject(UObject* FromObject, UOb
 	}
 }
 
-bool UInventoryComponent::AddItem(AActor* ItemActor)
+bool UInventoryComponent::ShouldIgnorePropertyCopy(const FProperty& Property1, const FProperty& Property2) const
+{
+	for (TFieldIterator<FProperty> Property_1(APropertyExchangableItemBase::StaticClass()); Property_1; ++Property_1)
+	{
+		const bool bNamesAndTypesMatch = Property_1->SameType(&Property1) && (Property_1->GetFName() == Property1.GetFName());
+		
+		//	Ignore also uber graphs. TODO: How do to this better?
+		const bool bIsUberGraph = Property1.GetCPPType() == FString("FPointerToUberGraphFrame");
+		
+		if(bNamesAndTypesMatch || bIsUberGraph)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool UInventoryComponent::AddItemToInventory(AActor* ItemActor)
 {
 	AActor* InventoryOwner = GetOwner();
 
@@ -102,9 +130,51 @@ bool UInventoryComponent::AddItem(AActor* ItemActor)
 	return false;
 }
 
-bool UInventoryComponent::RemoveItem(AActor* Item)
+bool UInventoryComponent::RemoveItemFromInventory(AActor* Item)
 {
+	check(IsValid(Item));
+	UInventoryItemComponent* ItemComp = Item->FindComponentByClass<UInventoryItemComponent>();
+
+	if(IsValid(ItemComp))
+	{
+		return RemoveItemFromInventoryByGUID(ItemComp->GetItemGUID());
+	}
+
+	UE_LOG(LogInventory, Warning, TEXT("Item (%s) could not be removed from inventory on actor (%s). The item did not have an InventoryItemComponent"), *GetNameSafe(Item), *GetNameSafe(GetOwner()));
+	
 	return false;
+}
+
+bool UInventoryComponent::RemoveItemFromInventoryByGUID(const FGuid& ItemGUID)
+{
+	UInventoryItemComponent* FoundItem = nullptr;
+	
+	for(AActor* Item : Inventory)
+	{
+		UInventoryItemComponent* ItemComp = Item->FindComponentByClass<UInventoryItemComponent>();
+		if(IsValid(ItemComp) && ItemComp->GetItemGUID() == ItemGUID)
+		{
+			//	Same item in inventory
+			FoundItem = ItemComp;
+			break;
+		}
+	}
+
+	if(FoundItem)
+	{
+		Inventory.Remove(FoundItem->GetOwner());
+		
+		UE_LOG(LogInventory, Log, TEXT("Item (%s) with GUID (%s) removed from inventory on actor (%s)."), *GetNameSafe(FoundItem->GetOwner()), *ItemGUID.ToString(), *GetNameSafe(GetOwner()));
+
+		//	TODO: Drop item and spawn collectible version
+		
+		return true;
+	}
+	else
+	{
+		UE_LOG(LogInventory, Log, TEXT("No item with GUID (%s) found in inventory of actor (%s)."), *ItemGUID.ToString(), *GetNameSafe(GetOwner()));
+		return false;
+	}
 }
 
 void UInventoryComponent::OnRep_Inventory()
