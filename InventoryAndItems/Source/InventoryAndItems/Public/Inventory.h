@@ -18,7 +18,8 @@ public:
 	UFUNCTION(Category = "Inventory", BlueprintCallable)
 	//	This function goes through all the properties in the FromObject and transfers properties to the ToObject. NOTE: The properties need to be exactly the same name and type for the values to pass between each other
 	void TransferInventoryDataToObject(UObject* FromObject, UObject* ToObject) const;
-	bool ShouldIgnorePropertyCopy(const FProperty& Property1, const FProperty& Property2) const;
+	//	Checks whether the property belongs to a base class. Only properties added to child classes will be copied over
+	static bool ShouldIgnoreBaseClassPropertyCopy(const FProperty& Property1);
 
 	UFUNCTION(Category = "Inventory", BlueprintCallable, BlueprintAuthorityOnly)
 	bool AddItemToInventory(AActor* Item);

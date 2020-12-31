@@ -2,10 +2,6 @@
 #include "InventoryItem.h"
 #include <UnrealNetwork.h>
 #include <Classes/Kismet/GameplayStatics.h>
-
-
-#include "CollectibleItemBase.h"
-#include "InventoryItemBase.h"
 #include "PropertyExchangableItemBase.h"
 
 DEFINE_LOG_CATEGORY(LogInventory)
@@ -28,34 +24,40 @@ void UInventoryComponent::TransferInventoryDataToObject(UObject* FromObject, UOb
 {
 	ensure(IsValid(FromObject) && IsValid(ToObject));
 
+	int32 PropertiesCopiedSuccessfully = 0;
+	
 	//	Go through each property in the class
-	for (TFieldIterator<FProperty> property_1(FromObject->GetClass()); property_1; ++property_1)
+	for (TFieldIterator<FProperty> Property_1(FromObject->GetClass()); Property_1; ++Property_1)
 	{
 		//	Now go through every property in the other object and see if there is a matching one
 		for (TFieldIterator<FProperty> property_2(ToObject->GetClass()); property_2; ++property_2)
 		{
-			if(ShouldIgnorePropertyCopy(**property_1, **property_2))
+			if(ShouldIgnoreBaseClassPropertyCopy(**Property_1))
 			{
 				continue;
 			}
 			
 			//	Check that both have matching types and matching names
-			const bool bNamesAndTypesMatch = property_1->SameType(*property_2) && (property_1->GetFName() == property_2->GetFName());
+			const bool bNamesAndTypesMatch = Property_1->SameType(*property_2) && (Property_1->GetFName() == property_2->GetFName());
 
 			if (bNamesAndTypesMatch)
 			{
-				UE_LOG(LogInventory, Verbose, TEXT("Copying (%s)(%s) property from (%s) to (%s)"), *property_1->GetCPPType(), *property_1->GetFName().ToString(), *GetNameSafe(FromObject), *GetNameSafe(ToObject));
-				void* theData = property_1->ContainerPtrToValuePtr<void>(FromObject);
+				UE_LOG(LogInventory, Verbose, TEXT("Copying (%s)(%s) property from (%s) to (%s)"), *Property_1->GetCPPType(), *Property_1->GetFName().ToString(), *GetNameSafe(FromObject), *GetNameSafe(ToObject));
+				void* theData = Property_1->ContainerPtrToValuePtr<void>(FromObject);
 				void* destinationData = property_2->ContainerPtrToValuePtr<void>(ToObject);
-				property_1->CopySingleValue(destinationData, theData);
+				Property_1->CopySingleValue(destinationData, theData);
 
+				PropertiesCopiedSuccessfully++;
+				
 				break;
 			}
 		}
 	}
+
+	UE_LOG(LogInventory, Log, TEXT("Copied (%d) properties successfully from (%s) to (%s)."), PropertiesCopiedSuccessfully, *GetNameSafe(FromObject), *GetNameSafe(ToObject));
 }
 
-bool UInventoryComponent::ShouldIgnorePropertyCopy(const FProperty& Property1, const FProperty& Property2) const
+bool UInventoryComponent::ShouldIgnoreBaseClassPropertyCopy(const FProperty& Property1)
 {
 	for (TFieldIterator<FProperty> Property_1(APropertyExchangableItemBase::StaticClass()); Property_1; ++Property_1)
 	{
