@@ -270,7 +270,7 @@ const void UFocusComponent::DrawDebugs(float deltaTime)
 	{
 		if(UFocusableComponent* FocusComp = ActorIter->FindComponentByClass<UFocusableComponent>())
 		{
-			const FColor ColorOfFocusableReachRadius = ((FocusingSourceLocation-ActorIter->GetActorLocation()).Size() <= FocusComp->GetFocusDistance())?(FColor::Green):(FColor::Red);
+			const FColor ColorOfFocusableReachRadius = ((FocusingSourceLocation-ActorIter->GetActorLocation()).Size() <= FocusComp->GetFocusDistance() || *ActorIter == GetFocusedActor())?(FColor::Green):(FColor::Red);
 			DrawDebugLine(World, ActorIter->GetActorLocation(), ActorIter->GetActorLocation()+ FVector(0,0, FocusComp->GetFocusDistance()), ColorOfFocusableReachRadius, false, -1.0f, 0, 2.0f);
 			DrawDebugSphere(World, ActorIter->GetActorLocation(), FocusComp->GetFocusDistance(), 6, ColorOfFocusableReachRadius, false, -1.0f, 0, 1.0f);
 		}
@@ -342,8 +342,7 @@ const TWeakObjectPtr<AActor> UFocusComponent::FindBestFocusCandidate_Internal(co
 		const float DistanceToFocusActorFromFocusStartPoint = (FocusActorLocation - 
 		FocusRayStartLocation).Size();
 		
-		const float FocusActorDistanceToFocusCenterLine = DistanceToFocusActorFromFocusStartPoint * 
-		(FMath::Sin(AngleToFocusActor));
+		const float FocusActorDistanceToFocusCenterLine = DistanceToFocusActorFromFocusStartPoint * (FMath::Sin(AngleToFocusActor));
 
 		//	This actor is a better candidate
 		if (FocusActorDistanceToFocusCenterLine < BestDistance)

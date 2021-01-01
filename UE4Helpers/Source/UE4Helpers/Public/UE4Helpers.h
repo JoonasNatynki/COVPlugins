@@ -121,60 +121,60 @@ public:
 	UE4CodeHelpers(const FObjectInitializer& ObjInit);
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable, meta = (WorldContext = "WorldContextObject"))
-		static FString GetNetModePrefix(const UObject* WorldContextObject);
+	static FString GetNetModePrefix(const UObject* WorldContextObject);
 
 	//	Simplified line trace function with a baked in Trace Parameter initialization
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable, meta = (WorldContext = "WorldContextObject"))
-		static FHitResult SimpleTraceByChannel(const UObject* WorldContextObject, const FVector& startPos, const FVector& endPos, ECollisionChannel channel, const FName& TraceTag);
+	static FHitResult SimpleTraceByChannel(const UObject* WorldContextObject, const FVector& startPos, const FVector& endPos, ECollisionChannel channel, const FName& TraceTag);
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable)
-		//	A simplified line tracer for getting a hit on your cross hairs
-		static FHitResult CastCrossHairLineTrace(const AActor* character, float rayDistance);
+	//	A simplified line tracer for getting a hit on your cross hairs
+	static FHitResult CastCrossHairLineTrace(const AActor* character, float rayDistance);
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable)
-		//	Will read a file in a specific folder with the variable name
-		static FString GetFileLine(const FString& InFileName, const FString& Folder, const FString& ConfigName);
+	//	Will read a file in a specific folder with the variable name
+	static FString GetFileLine(const FString& InFileName, const FString& Folder, const FString& ConfigName);
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable)
-		//	Will read a file's variable's value in the config folder
-		static FString GetConfigFileLine(const FString& InFileName, const FString& ConfigName);
+	//	Will read a file's variable's value in the config folder
+	static FString GetConfigFileLine(const FString& InFileName, const FString& ConfigName);
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable)
-		//	Will return the number of lines in a file. No file found = -1
-		static int32 GetNumberOfRowsInFile(const FString& InFileName, const FString& Folder);
+	//	Will return the number of lines in a file. No file found = -1
+	static int32 GetNumberOfRowsInFile(const FString& InFileName, const FString& Folder);
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable, BlueprintPure)
-		//	Will return the number of commits in a the repository. No repository found = -1
-		static int32 GetRepositoryCommitCount();
+	//	Will return the number of commits in a the repository. No repository found = -1
+	static int32 GetRepositoryCommitCount();
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable)
-		static APlayerCameraManager* TryGetPawnCameraManager(const APawn* pawn);
+	static APlayerCameraManager* TryGetPawnCameraManager(const APawn* pawn);
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable)
-		//	Simply checks if the object is of type or not
-		static bool IsOfType(const UObject* object, TSubclassOf<UObject> type);
+	//	Simply checks if the object is of type or not
+	static bool IsOfType(const UObject* object, TSubclassOf<UObject> type);
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable, meta = (WorldContext = "WorldContextObject"))
-		static TArray<FVector> CalculateParabolicTrajectory(const UObject* WorldContextObject, const FVector& StartLocation, const FVector& Velocity, const FVector& Gravity, const float TimeToSimulate, const int32 NumberOfTrajectoryPoints);
+	static TArray<FVector> CalculateParabolicTrajectory(const UObject* WorldContextObject, const FVector& StartLocation, const FVector& Velocity, const FVector& Gravity, const float TimeToSimulate, const int32 NumberOfTrajectoryPoints);
 
 
 	static FString GetNetModeName(const UObject* worldContextObject);
 
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, CustomThunk, meta = (DisplayName = "Is array empty", CompactNodeTitle = "ISEMPTY", ArrayParm = "TargetArray"), Category = "Utilities|Array")
-		static bool IsArrayEmpty(const TArray<int32>& TargetArray);
+	static bool IsArrayEmpty(const TArray<int32>& TargetArray);
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable)
-		//	Calculates a rotator that has its up vector pointing to the normal given. Very useful for things that need to stick to surfaces like bullet decals and footprints
-		static FRotator OrientRotationToNormalVector(const FRotator& CurrentRotation, const FVector& Normal);
+	//	Calculates a rotator that has its up vector pointing to the normal given. Very useful for things that need to stick to surfaces like bullet decals and footprints
+	static FRotator OrientRotationToNormalVector(const FRotator& CurrentRotation, const FVector& Normal);
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable)
-		//	A more lightweight version of the GetAllChildClassesOfType. This will only search the classes that are already loaded in memory.
-		static TArray<UClass*> GetAllAssetsOfType(TSubclassOf<AActor> Type, const FString& PathToSearchFor);
+	//	A more lightweight version of the GetAllChildClassesOfType. This will only search the classes that are already loaded in memory.
+	static TArray<UClass*> GetAllAssetsOfType(TSubclassOf<AActor> Type, const FString& PathToSearchFor);
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable)
-		//	Rotates a vector around a point
-		static FVector RotateVectorAroundPoint(const FVector& vectorToRotate, const FVector& pointToRotateAround, const FRotator& theRotationToApply);
+	//	Rotates a vector around a point
+	static FVector RotateVectorAroundPoint(const FVector& vectorToRotate, const FVector& pointToRotateAround, const FRotator& theRotationToApply);
 
 	template<class T> static T* FindDefaultComponentsByClass(const TSubclassOf<AActor> InActorClass, const TSubclassOf<T> InComponentClass);
 
