@@ -176,6 +176,7 @@ public:
 		//	Rotates a vector around a point
 		static FVector RotateVectorAroundPoint(const FVector& vectorToRotate, const FVector& pointToRotateAround, const FRotator& theRotationToApply);
 
+	template<class T> static T* FindDefaultComponentsByClass(const TSubclassOf<AActor> InActorClass, const TSubclassOf<T> InComponentClass);
 
 	static bool GenericIsArrayEmpty(void* TargetArray, const FArrayProperty* ArrayProp);
 
@@ -208,14 +209,53 @@ public:
 	);
 };
 
-
-
-
-
-
-
-
-
+template<class T> T* UE4CodeHelpers::FindDefaultComponentsByClass(const TSubclassOf<AActor> InActorClass, const TSubclassOf<T> InComponentClass)
+{
+	if (!IsValid(InActorClass))
+	{
+		return nullptr;
+	}
+ 
+	// Check CDO.
+	AActor* ActorCDO = InActorClass->GetDefaultObject<AActor>();
+	T* FoundComponent = ActorCDO->FindComponentByClass<T>();
+ 
+	if (FoundComponent != nullptr)
+	{
+		return FoundComponent;
+	}
+ 
+	// Check blueprint nodes. Components added in blueprint editor only (and not in code) are not available from
+	// CDO.
+	UBlueprintGeneratedClass* RootBlueprintGeneratedClass = Cast<UBlueprintGeneratedClass>(InActorClass);
+	UClass* ActorClass = InActorClass;
+ 
+	// Go down the inheritance tree to find nodes that were added to parent blueprints of our blueprint graph.
+	do
+	{
+		UBlueprintGeneratedClass* ActorBlueprintGeneratedClass = Cast<UBlueprintGeneratedClass>(ActorClass);
+		if (!ActorBlueprintGeneratedClass)
+		{
+			return nullptr;
+		}
+ 
+		const TArray<USCS_Node*>& ActorBlueprintNodes =
+            ActorBlueprintGeneratedClass->SimpleConstructionScript->GetAllNodes();
+ 
+		for (USCS_Node* Node : ActorBlueprintNodes)
+		{
+			if (Node->ComponentClass->IsChildOf(InComponentClass))
+			{
+				return Cast<T>(Node->GetActualComponentTemplate(RootBlueprintGeneratedClass));
+			}
+		}
+ 
+		ActorClass = Cast<UClass>(ActorClass->GetSuperStruct());
+ 
+	} while (ActorClass != AActor::StaticClass());
+ 
+	return nullptr;
+}
 
 FORCEINLINE bool UE4CodeHelpers::SimpleTraceSphere(
 	AActor* ActorToIgnore,

@@ -7,7 +7,6 @@
 #include <Camera/PlayerCameraManager.h>
 #include <MessageLog.h>
 #include <UObjectToken.h>
-#include <IAssetRegistry.h>
 #include <Engine/AssetManager.h>
 
 #if WITH_EDITOR
