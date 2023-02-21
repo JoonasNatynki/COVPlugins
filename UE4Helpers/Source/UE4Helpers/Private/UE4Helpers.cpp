@@ -2,19 +2,13 @@
 
 #include "UE4Helpers.h"
 #include "Engine.h"
-#include <Engine/EngineBaseTypes.h>
-#include <Engine/EngineTypes.h>
-#include <Camera/PlayerCameraManager.h>
-#include <MessageLog.h>
-#include <UObjectToken.h>
-#include <Engine/AssetManager.h>
 
 #if WITH_EDITOR
 
-#include <KismetEditorUtilities.h>
-
 #endif
-#include <Kismet/KismetMathLibrary.h>
+
+#include "Misc/UObjectToken.h"
+#include "UObject/UnrealTypePrivate.h"
 
 #define LOCTEXT_NAMESPACE "UE4CodeHelpers"
 
@@ -313,7 +307,7 @@ FVector UE4CodeHelpers::RotateVectorAroundPoint(const FVector& vectorToRotate, c
 	return translatedVector;
 }
 
-bool UE4CodeHelpers::GenericIsArrayEmpty(void* TargetArray, const UArrayProperty* ArrayProp)
+bool UE4CodeHelpers::GenericIsArrayEmpty(void* TargetArray, const FArrayProperty* ArrayProp)
 {
 	if (TargetArray)
 	{

@@ -1,10 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "FocusableComponent.h"
-#include <Kismet/KismetSystemLibrary.h>
-#include <GameFramework/Actor.h>
-#include <UnrealNetwork.h>
+#include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY(LogFocusable)
 

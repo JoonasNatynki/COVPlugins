@@ -3,12 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Modules/ModuleManager.h"
-#include <UserWidget.h>
-#include <InputCoreTypes.h>
-#include <Kismet/BlueprintFunctionLibrary.h>
-#include <DelegateCombinations.h>
-
+#include "Blueprint/UserWidget.h"
 #include "ScreenStack.generated.h"
 
 class APlayerController;

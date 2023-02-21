@@ -1,12 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "HoveringMotion.h"
-#include <Components/MeshComponent.h>
-#include <MessageLog.h>
-#include <UObjectToken.h>
-#include <Kismet/KismetMathLibrary.h>
-#include <Kismet/GameplayStatics.h>
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Misc/UObjectToken.h"
 
 DEFINE_LOG_CATEGORY(LogHoveringMotion)
 

@@ -6,12 +6,10 @@
 #include "BlueprintNodeSpawner.h"
 #include "EditorCategoryUtils.h"
 #include "BlueprintActionDatabase.h"
-#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "KismetCompilerMisc.h"
 #include "EdGraphSchema_K2.h"
 #include "K2Node_CallFunction.h"
 #include "Blueprint/UserWidget.h"
-#include <UserWidget.h>
 
 #define LOCTEXT_NAMESPACE "GameInventorySystem"
 

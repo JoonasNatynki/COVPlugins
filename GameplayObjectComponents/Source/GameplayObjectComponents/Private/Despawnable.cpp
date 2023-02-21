@@ -1,6 +1,4 @@
 #include "Despawnable.h"
-#include <GameFramework/Actor.h>
-#include <MemoryReader.h>
 
 DEFINE_LOG_CATEGORY(LogDespawnable)
 

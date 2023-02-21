@@ -1,21 +1,14 @@
 #include "COVEditorRuntime.h"
 
 #include "Engine.h"
-#include <Engine/EngineBaseTypes.h>
-#include <Engine/EngineTypes.h>
-#include <Camera/PlayerCameraManager.h>
-#include <MessageLog.h>
-#include <UObjectToken.h>
-#include <IAssetRegistry.h>
 #include <Engine/AssetManager.h>
 
 #if WITH_EDITOR
 
-#include <KismetEditorUtilities.h>
-
 #endif
+
 #include "ScreenStack.h"
-#include <LogMacros.h>
+#include "Misc/UObjectToken.h"
 
 void UCOVEditorRuntime::StartupModule()
 {

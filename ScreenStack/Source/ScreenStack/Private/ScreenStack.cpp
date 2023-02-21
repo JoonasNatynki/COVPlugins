@@ -1,8 +1,8 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "ScreenStack.h"
-#include <UObjectToken.h>
-#include <GameFramework/HUD.h>
+#include "GameFramework/HUD.h"
+#include "Misc/UObjectToken.h"
 
 #define LOCTEXT_NAMESPACE "FScreenStackModule"
 

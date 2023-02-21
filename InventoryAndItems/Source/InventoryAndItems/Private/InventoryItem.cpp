@@ -1,5 +1,5 @@
 #include "InventoryItem.h"
-#include <UnrealNetwork.h>
+#include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY(LogInventoryItem)
 

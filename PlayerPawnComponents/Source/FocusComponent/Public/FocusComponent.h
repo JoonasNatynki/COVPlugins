@@ -3,11 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Modules/ModuleManager.h"
 #include "Components/ActorComponent.h"
-#include <DelegateCombinations.h>
 #include <CollisionQueryParams.h>
-#include <GameFramework/PlayerController.h>
 #include "FocusComponent.generated.h"
 
 class APlayerCameraManager;

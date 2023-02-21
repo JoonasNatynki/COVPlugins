@@ -1,10 +1,5 @@
 #pragma once
 #include "CoreMinimal.h"
-#include "Modules/ModuleManager.h"
-#include <Engine/EngineTypes.h>
-#include <GameFramework/PlayerController.h>
-#include <MessageLog.h>
-#include <UObjectToken.h>
 #include <Kismet/BlueprintFunctionLibrary.h>
 #include "COVEditorRuntime.generated.h"
 

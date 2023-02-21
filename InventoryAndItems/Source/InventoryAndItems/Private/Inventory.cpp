@@ -1,8 +1,8 @@
 #include "Inventory.h"
 #include "InventoryItem.h"
-#include <UnrealNetwork.h>
-#include <Classes/Kismet/GameplayStatics.h>
 #include "PropertyExchangableItemBase.h"
+#include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY(LogInventory)
 

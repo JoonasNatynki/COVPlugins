@@ -4,15 +4,10 @@
 #include <DrawDebugHelpers.h>
 #include <Kismet/KismetSystemLibrary.h>
 #include "FocusableComponent.h"
-#include <Engine/EngineTypes.h>
-#include <MessageLog.h>
-#include <GameFramework/Controller.h>
-#include <GameFramework/Pawn.h>
-#include <UObjectToken.h>
-
 #include "EngineUtils.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
+#include "Misc/UObjectToken.h"
 
 #define LOCTEXT_NAMESPACE "FFocusComponentModule"
 
@@ -296,7 +291,7 @@ const TArray<FHitResult> UFocusComponent::GetOverlappingActorsInFocusArea_Intern
 	{
 		for (auto& Hit : Hits)
 		{
-			const AActor* HitActor = Hit.Actor.Get();
+			const AActor* HitActor = Hit.GetActor();
 
 			if (IsValid(HitActor))
 			{
@@ -321,7 +316,7 @@ const TWeakObjectPtr<AActor> UFocusComponent::FindBestFocusCandidate_Internal(co
 		if (bFocusOnlyOnFocusables)
 		{
 			const FVector& FocusSourceLocation = GetFocusDistanceRelativeLocation();
-			const UFocusableComponent* FocusableComponent = Cast<UFocusableComponent>(Hit.Actor->GetComponentByClass(UFocusableComponent::StaticClass()));
+			const UFocusableComponent* FocusableComponent = Cast<UFocusableComponent>(Hit.GetActor()->GetComponentByClass(UFocusableComponent::StaticClass()));
 			const float DistanceToActorWhoIsFocusing = (FocusSourceLocation - FocusActorLocation).Size();	//	Used for trimming results
 
 			if (!IsValid(FocusableComponent) || !FocusableComponent->IsFocusable() || (DistanceToActorWhoIsFocusing > FocusableComponent->GetFocusDistance()) || (DistanceToActorWhoIsFocusing > FocusingMaxDistance))
@@ -347,7 +342,7 @@ const TWeakObjectPtr<AActor> UFocusComponent::FindBestFocusCandidate_Internal(co
 		//	This actor is a better candidate
 		if (FocusActorDistanceToFocusCenterLine < BestDistance)
 		{
-			Candidate = Hit.Actor;
+			Candidate = Hit.GetActor();
 			BestDistance = FocusActorDistanceToFocusCenterLine;
 		}
 	}
