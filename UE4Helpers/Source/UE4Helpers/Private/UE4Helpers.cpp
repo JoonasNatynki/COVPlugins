@@ -47,6 +47,26 @@ FString UE4CodeHelpers::GetNetModePrefix(const UObject* WorldContextObject)
 	return netModePrefix.IsEmpty() ? TEXT("") : FString::Printf(TEXT("%s: "), *netModePrefix);
 }
 
+UActorComponent* UE4CodeHelpers::FindComponentByInterface(const AActor* Actor, TSubclassOf<UInterface> Interface)
+{
+	if (!IsValid(Actor))
+	{
+		return nullptr;
+	}
+
+	const TInlineComponentArray<UActorComponent*> Comps(Actor);
+
+	for (UActorComponent* Comp : Comps)
+	{
+		if (Comp->GetClass()->ImplementsInterface(Interface))
+		{
+			return Comp;
+		}
+	}
+
+	return nullptr;
+}
+
 bool UE4CodeHelpers::IsOfType(const UObject* object, TSubclassOf<UObject> type)
 {
 	return object->IsA(type);

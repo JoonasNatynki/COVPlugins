@@ -127,6 +127,13 @@ public:
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable, meta = (WorldContext = "WorldContextObject"))
 	static FHitResult SimpleTraceByChannel(const UObject* WorldContextObject, const FVector& startPos, const FVector& endPos, ECollisionChannel channel, const FName& TraceTag);
 
+	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable, meta = (WorldContext = "WorldContextObject"))
+	static UActorComponent* FindComponentByInterface(const AActor* Actor, TSubclassOf<UInterface> Interface);
+
+	template <class T> static T* FindComponentByIInterface(const UActorComponent* Comp);
+
+	template <class T> static T* FindComponentByIInterface(const AActor* Actor);
+	
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable)
 	//	A simplified line tracer for getting a hit on your cross hairs
 	static FHitResult CastCrossHairLineTrace(const AActor* character, float rayDistance);
@@ -208,6 +215,34 @@ public:
 		ECollisionChannel TraceChannel = ECC_Pawn
 	);
 };
+
+template <class T>
+T* UE4CodeHelpers::FindComponentByIInterface(const UActorComponent* Comp)
+{
+	return Comp ? FindComponentByIInterface<T>(Comp->GetOwner()) : nullptr;
+}
+
+template <class T>
+T* UE4CodeHelpers::FindComponentByIInterface(const AActor* Actor)
+{
+	if (!IsValid(Actor))
+	{
+		return nullptr;
+	}
+
+	TInlineComponentArray<UActorComponent*> Comps(Actor);
+
+	for (UActorComponent* Comp : Comps)
+	{
+		T* InterfaceComp = Cast<T>(Comp);
+		if (InterfaceComp)
+		{
+			return InterfaceComp;
+		}
+	}
+
+	return nullptr;
+}
 
 template<class T> T* UE4CodeHelpers::FindDefaultComponentsByClass(const TSubclassOf<AActor> InActorClass, const TSubclassOf<T> InComponentClass)
 {
