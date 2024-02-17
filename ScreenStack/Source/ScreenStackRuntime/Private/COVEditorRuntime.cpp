@@ -42,7 +42,7 @@ class UUserWidget* UCOVEditorRuntimeLibrary::Create(UObject* WorldContextObject,
 
 			if (OwningPlayer)
 			{
-				TSubclassOf<UScreen> screenType = WidgetType;
+				TSubclassOf<UScreen> screenType(WidgetType);
 				screen = (UUserWidget*)(Cast<UScreenStack>(screenStack)->PushScreenByClass(screenType));
 			}
 			else if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))

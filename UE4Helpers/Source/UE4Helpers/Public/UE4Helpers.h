@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Runtime/Engine/Classes/Engine/BlueprintGeneratedClass.h"
+#include "Runtime/Engine/Classes/Engine/SimpleConstructionScript.h"
 #include "GameFramework/PlayerController.h"
 #include "UE4Helpers.generated.h"
 
