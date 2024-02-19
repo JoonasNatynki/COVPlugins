@@ -155,7 +155,7 @@ int32 UE4CodeHelpers::GetNumberOfRowsInFile(const FString& InFileName, const FSt
 	if (FoundSomething)
 	{
 		const int32 RowCount = Rows.Num();
-		UE_LOG(LogUE4Helpers, Log, TEXT("Found a number of (%d) rows in the file (%s)."), RowCount, *InFileName);
+		UE_LOG(LogUE4Helpers, Verbose, TEXT("Found a number of (%d) rows in the file (%s)."), RowCount, *InFileName);
 		return RowCount;
 	}
 
