@@ -307,6 +307,52 @@ FVector UE4CodeHelpers::RotateVectorAroundPoint(const FVector& vectorToRotate, c
 	return translatedVector;
 }
 
+const FVector UE4CodeHelpers::FindRandomPointInsideShapeComponent(const UShapeComponent* ShapeComponent)
+{
+	if (!ensureAlways(IsValid(ShapeComponent)))
+	{
+		FVector();
+	}
+
+	if (const UBoxComponent* AsBox = Cast<UBoxComponent>(ShapeComponent))
+	{
+		const FVector Center = AsBox->GetComponentLocation();
+		const FVector Extent = AsBox->GetScaledBoxExtent();
+
+		// Generate random point within the box
+		const float RandX = FMath::RandRange(-Extent.X, Extent.X);
+		const float RandY = FMath::RandRange(-Extent.Y, Extent.Y);
+		const float RandZ = FMath::RandRange(-Extent.Z, Extent.Z);
+
+		// Adjust for the box's rotation
+		const FVector RandomPoint = Center + AsBox->GetComponentQuat().RotateVector(FVector(RandX, RandY, RandZ));
+		return RandomPoint;
+	}
+	
+	if (const USphereComponent* AsSphere = Cast<USphereComponent>(ShapeComponent))
+	{
+		const float Radius = AsSphere->GetScaledSphereRadius();
+		const FVector Center = AsSphere->GetComponentLocation();
+
+		const float RandTheta = FMath::RandRange(0.0f, 2.0f * PI);
+		const float RandPhi = FMath::RandRange(0.0f, PI);
+		const float RandRadius = FMath::RandRange(0.0f, Radius);
+
+		// Convert spherical to Cartesian coordinates
+		const float X = RandRadius * FMath::Sin(RandPhi) * FMath::Cos(RandTheta);
+		const float Y = RandRadius * FMath::Sin(RandPhi) * FMath::Sin(RandTheta);
+		const float Z = RandRadius * FMath::Cos(RandPhi);
+
+		const FVector RandomPoint = Center + FVector(X, Y, Z);
+
+		return RandomPoint;
+	}
+
+	ensureAlwaysMsgf(false, TEXT("Unhandled shape component."));
+
+	return FVector();
+}
+
 bool UE4CodeHelpers::GenericIsArrayEmpty(void* TargetArray, const FArrayProperty* ArrayProp)
 {
 	if (TargetArray)

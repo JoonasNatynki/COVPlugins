@@ -181,6 +181,9 @@ public:
 	//	Rotates a vector around a point
 	static FVector RotateVectorAroundPoint(const FVector& vectorToRotate, const FVector& pointToRotateAround, const FRotator& theRotationToApply);
 
+	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable)
+	static const FVector FindRandomPointInsideShapeComponent(const UShapeComponent* ShapeComponent);
+
 	template<class T> static T* FindDefaultComponentsByClass(const TSubclassOf<AActor> InActorClass, const TSubclassOf<T> InComponentClass);
 
 	static bool GenericIsArrayEmpty(void* TargetArray, const FArrayProperty* ArrayProp);
