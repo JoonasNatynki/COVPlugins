@@ -21,7 +21,7 @@ public:
 	bool Spawn(const FSpawnRequest& SpawnRequest) const;
 
 	// Get random spawning shape and optionally make sure it is valid for the spawnable
-	static USpawningBoxShapeComponent* GetRandomSpawningShapeComponentOnActor(
+	static ISpawningShapeIF* GetRandomSpawningShapeComponentOnActor(
 		const AActor* ActorWithSpawningShapes,
 		const USpawnable* SpawnableContext = nullptr);
 	

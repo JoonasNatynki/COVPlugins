@@ -18,3 +18,8 @@ void USpawningBoxShapeComponent::InitializeComponent()
 		SpawnComp->AddSpawnableShape(this);
 	}
 }
+
+const FGameplayTagContainer& USpawningBoxShapeComponent::GetSpawnableTags() const
+{
+	return SpawnableTags;
+}

@@ -14,8 +14,12 @@ class USpawningBoxShapeComponent : public UBoxComponent, public ISpawningShapeIF
 
 public:
 	USpawningBoxShapeComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
 	virtual void InitializeComponent() override;
 
+	virtual const FGameplayTagContainer& GetSpawnableTags() const override;
+
+private:
 	// Spawn tags that can limit the types of spawns that can happen into this shape
 	UPROPERTY(Category = "Spawning", EditAnywhere)
 	FGameplayTagContainer SpawnableTags;

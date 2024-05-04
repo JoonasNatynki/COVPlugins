@@ -13,7 +13,7 @@ bool USpawnerWorldSubSystem::Spawn(const FSpawnRequest& SpawnRequest) const
 	return ProcessSpawnRequest(SpawnRequest);
 }
 
-USpawningBoxShapeComponent* USpawnerWorldSubSystem::GetRandomSpawningShapeComponentOnActor(
+ISpawningShapeIF* USpawnerWorldSubSystem::GetRandomSpawningShapeComponentOnActor(
 	const AActor* ActorWithSpawningShapes, const USpawnable* SpawnableContext)
 {
 	if (!ensure(IsValid(ActorWithSpawningShapes)))
@@ -21,17 +21,17 @@ USpawningBoxShapeComponent* USpawnerWorldSubSystem::GetRandomSpawningShapeCompon
 		nullptr;
 	}
 
-	TArray<USpawningBoxShapeComponent*> Shapes;
-	ActorWithSpawningShapes->GetComponents<USpawningBoxShapeComponent>(Shapes);
+	TArray<UActorComponent*> Shapes = ActorWithSpawningShapes->GetComponentsByInterface(
+		USpawningShapeIF::StaticClass());
 
 	// If Spawnable is given, prune out invalid shapes for the spawnable
 	if (IsValid(SpawnableContext))
 	{
 		if (const USpawnerGameplayTagRequirement* Prop = SpawnableContext->FindSpawnProperty<USpawnerGameplayTagRequirement>())
 		{
-			Shapes = Shapes.FilterByPredicate([Prop](const USpawningBoxShapeComponent* Comp)
+			Shapes = Shapes.FilterByPredicate([Prop](const UActorComponent* Comp)
 			{
-				return Comp->SpawnableTags.MatchesQuery(Prop->TagQuery);
+				return Cast<ISpawningShapeIF>(Comp)->GetSpawnableTags().MatchesQuery(Prop->TagQuery);
 			});
 		}
 	}
@@ -45,7 +45,7 @@ USpawningBoxShapeComponent* USpawnerWorldSubSystem::GetRandomSpawningShapeCompon
 			return nullptr;
 		}
 	
-		return Shapes[Rand];
+		return Cast<ISpawningShapeIF>(Shapes[Rand]);
 	}
 	
 	return nullptr;

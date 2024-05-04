@@ -19,7 +19,7 @@ class ISpawningShapeIF
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
-	virtual const FGameplayTag GetSpawnableTag() const PURE_VIRTUAL(,return FGameplayTag(););
+	virtual const FGameplayTagContainer& GetSpawnableTags() const = 0;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	const FVector GetRandomPointInShapeComponent(const bool bTryFindSurface = false) const;

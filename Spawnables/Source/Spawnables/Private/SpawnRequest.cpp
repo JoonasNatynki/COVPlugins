@@ -67,13 +67,15 @@ void FSpawnRequest::InitializeFromSpawner(const USpawnerComponent* SpawnerCompon
 
 	if (SpawnerComponent->bUseSpawnableShapes && SpawnerComponent->HasSpawnableShapes())
 	{
-		const USpawningBoxShapeComponent* RandShape = USpawnerWorldSubSystem::GetRandomSpawningShapeComponentOnActor(
+		if (const ISpawningShapeIF* RandShape = USpawnerWorldSubSystem::GetRandomSpawningShapeComponentOnActor(
 			SpawnerComponent->GetOwner(),
-			Spawnable->GetDefaultObject<USpawnable>());
-
-		if (IsValid(RandShape))
+			Spawnable->GetDefaultObject<USpawnable>()))
 		{
-			const FVector RandPointInShape = RandShape->Execute_GetRandomPointInShapeComponent(RandShape, SpawnerComponent->bTryFindSurfaceToPlace);
+			const FVector RandPointInShape =
+				ISpawningShapeIF::Execute_GetRandomPointInShapeComponent(
+					CastChecked<UObject>(RandShape),
+					SpawnerComponent->bTryFindSurfaceToPlace);
+			
 			SpawnTransform.SetLocation(RandPointInShape);
 		}
 	}
@@ -86,7 +88,7 @@ void FSpawnRequest::InitializeFromSpawner(const USpawnerComponent* SpawnerCompon
 
 const FString FSpawnRequest::ToString() const
 {
-	FString ReturnString = GetNameSafe(Spawnable);
+	const FString ReturnString = GetNameSafe(Spawnable);
 	return ReturnString;
 }
 
