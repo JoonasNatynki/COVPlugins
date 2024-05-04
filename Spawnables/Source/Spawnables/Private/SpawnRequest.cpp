@@ -57,6 +57,11 @@ void FSpawnRequest::InitializeFromSpawner(const USpawnerComponent* SpawnerCompon
 		return;
 	}
 
+	if (!ensureAlways(IsValid(Spawnable)))
+	{
+		return;
+	}
+
 	bTryToAdjustForEncroachingGeometry = SpawnerComponent->bTryToAdjustForEncroachingGeometry;
 	Instigator = SpawnerComponent->GetOwner();
 
