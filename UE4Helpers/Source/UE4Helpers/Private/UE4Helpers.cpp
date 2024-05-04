@@ -41,6 +41,14 @@ FString UE4CodeHelpers::GetNetModePrefix(const UObject* WorldContextObject)
 	return netModePrefix.IsEmpty() ? TEXT("") : FString::Printf(TEXT("%s: "), *netModePrefix);
 }
 
+bool UE4CodeHelpers::IsInNonPreviewGameWorld(const UObject* WorldContextObject)
+{
+	return IsValid(WorldContextObject) &&
+		IsValid(WorldContextObject->GetWorld()) &&
+		WorldContextObject->GetWorld()->IsGameWorld() &&
+		!WorldContextObject->GetWorld()->IsPreviewWorld();
+}
+
 UActorComponent* UE4CodeHelpers::FindComponentByInterface(const AActor* Actor, TSubclassOf<UInterface> Interface)
 {
 	if (!IsValid(Actor))
@@ -65,6 +73,126 @@ bool UE4CodeHelpers::IsOfType(const UObject* object, TSubclassOf<UObject> type)
 {
 	return object->IsA(type);
 }
+
+bool UE4CodeHelpers::GetPlayerViewFrustum(const APlayerController* PlayerController, FConvexVolume& OutFrustum)
+{
+    return GetPlayerView(PlayerController, nullptr, nullptr, &OutFrustum);
+}
+
+bool UE4CodeHelpers::GetPlayerViewFrustum(const UObject* WorldContextObject, int32 PlayerIndex, FConvexVolume& OutFrustum)
+{
+    return GetPlayerView(WorldContextObject, PlayerIndex, nullptr, nullptr, &OutFrustum);
+}
+
+bool UE4CodeHelpers::GetPlayerView(const APlayerController* PlayerController, FVector* OutLocation, FRotator* OutRotation, FConvexVolume* OutFrustum)
+{
+    if (!PlayerController)
+    {
+       return false;
+    }
+
+    if (OutLocation || OutRotation)
+    {
+       if (PlayerController->PlayerCameraManager)
+       {
+          FVector location;
+          FRotator rotation;
+
+          PlayerController->PlayerCameraManager->GetCameraViewPoint(location, rotation);
+
+          if (OutLocation)
+             *OutLocation = location;
+
+          if (OutRotation)
+             *OutRotation = rotation;
+       }
+       else
+       {
+          // TODO: Assume pawn location?
+
+          if (OutLocation)
+             *OutLocation = FVector::ZeroVector;
+
+          if (OutRotation)
+             *OutRotation = FRotator::ZeroRotator;
+       }
+    }
+
+    if (OutFrustum)
+    {
+       // Need to retrieve the frustum as well.
+
+       FSceneViewProjectionData projection_data;
+
+       if (GetPlayerViewProjectionData(PlayerController, projection_data))
+       {
+          GetViewFrustumBounds(*OutFrustum, projection_data.ComputeViewProjectionMatrix(), false);
+       }
+       else
+       {
+          return false;
+       }
+    }
+
+    return true;
+}
+
+bool UE4CodeHelpers::GetPlayerView(const UObject* WorldContextObject, int32 PlayerIndex, FVector* OutLocation, FRotator* OutRotation, FConvexVolume* OutFrustum)
+{
+    const APlayerController* player_controller = UGameplayStatics::GetPlayerController(WorldContextObject, PlayerIndex);
+
+    return GetPlayerView(player_controller, OutLocation, OutRotation, OutFrustum);
+}
+
+bool UE4CodeHelpers::GetPlayerViewProjectionData(const APlayerController* PlayerController, FSceneViewProjectionData& OutProjectionData)
+{
+    const ULocalPlayer* local_player = PlayerController ? PlayerController->GetLocalPlayer() : nullptr;
+
+    if (local_player && local_player->ViewportClient && local_player->ViewportClient->Viewport)
+    {
+       return local_player->GetProjectionData(local_player->ViewportClient->Viewport, OutProjectionData);
+    }
+    else
+    {
+       // Without a proper local player the call to this function doesn't make any sense.
+    }
+
+    return false;
+}
+
+bool UE4CodeHelpers::GetPlayerViewProjectionData(
+    const UObject* WorldContextObject, int32 PlayerIndex, FSceneViewProjectionData& OutProjectionData)
+{
+    check(WorldContextObject);
+
+    const APlayerController* player_controller = UGameplayStatics::GetPlayerController(WorldContextObject, PlayerIndex);
+
+    return GetPlayerViewProjectionData(player_controller, OutProjectionData);
+}
+
+UActorComponent* UE4CodeHelpers::GetComponentByName(const AActor* Actor, FName ComponentName)
+{
+	if (!Actor)
+	{
+		return nullptr;
+	}
+
+	UActorComponent* FoundComponent = nullptr;
+	TArray<UActorComponent*> Components;
+	Actor->GetComponents(Components);
+	
+	for (UActorComponent* Component : Components)
+	{
+		if (Component->GetFName() == ComponentName)
+		{
+			FoundComponent = Component;
+			break;
+		}
+	}
+
+	return FoundComponent;
+}
+
 
 TArray<FVector> UE4CodeHelpers::CalculateParabolicTrajectory(const UObject* WorldContextObject, const FVector& StartLocation, const FVector& Velocity, const FVector& Gravity, const float TimeToSimulate, const int32 NumberOfTrajectoryPoints)
 {

@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class FocusComponent : ModuleRules
+public class FocusingComponent : ModuleRules
 {
-	public FocusComponent(ReadOnlyTargetRules Target) : base(Target)
+	public FocusingComponent(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
@@ -38,6 +38,7 @@ public class FocusComponent : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"UE4Helpers"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

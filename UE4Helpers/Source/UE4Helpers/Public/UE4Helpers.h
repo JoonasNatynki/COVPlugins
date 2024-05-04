@@ -126,6 +126,9 @@ public:
 	static FHitResult SimpleTraceByChannel(const UObject* WorldContextObject, const FVector& startPos, const FVector& endPos, ECollisionChannel channel, const FName& TraceTag);
 
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable, meta = (WorldContext = "WorldContextObject"))
+	static bool IsInNonPreviewGameWorld(const UObject* WorldContextObject);
+
+	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable, meta = (WorldContext = "WorldContextObject"))
 	static UActorComponent* FindComponentByInterface(const AActor* Actor, TSubclassOf<UInterface> Interface);
 
 	template <class T> static T* FindComponentByIInterface(const UActorComponent* Comp);
@@ -158,14 +161,38 @@ public:
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable)
 	//	Simply checks if the object is of type or not
 	static bool IsOfType(const UObject* object, TSubclassOf<UObject> type);
+	
+	static bool GetPlayerViewFrustum(const APlayerController* PlayerController, FConvexVolume& OutFrustum);
+	static bool GetPlayerViewFrustum(const UObject* WorldContextObject, int32 PlayerIndex, FConvexVolume& OutFrustum);
+	static bool GetPlayerView(
+		const APlayerController* PlayerController,
+		FVector* OutLocation,
+		FRotator* OutRotation,
+		FConvexVolume* OutFrustum);
 
+	static bool GetPlayerView(
+		const UObject* WorldContextObject,
+		int32 PlayerIndex,
+		FVector* OutLocation,
+	    FRotator* OutRotation,
+	    FConvexVolume* OutFrustum);
+	
+	static bool GetPlayerViewProjectionData(
+		const APlayerController* PlayerController,
+	    FSceneViewProjectionData& OutProjectionData);
+
+	static bool GetPlayerViewProjectionData(
+		const UObject* WorldContextObject,
+		int32 PlayerIndex,
+		FSceneViewProjectionData& OutProjectionData);
+	
+	static UActorComponent* GetComponentByName(const AActor* Actor, FName ComponentName);
+	
 	UFUNCTION(Category = "UEHelperFunctions", BlueprintCallable, meta = (WorldContext = "WorldContextObject"))
 	static TArray<FVector> CalculateParabolicTrajectory(const UObject* WorldContextObject, const FVector& StartLocation, const FVector& Velocity, const FVector& Gravity, const float TimeToSimulate, const int32 NumberOfTrajectoryPoints);
 
-
 	static FString GetNetModeName(const UObject* worldContextObject);
-
-
+	
 	UFUNCTION(BlueprintCallable, BlueprintPure, CustomThunk, meta = (DisplayName = "Is array empty", CompactNodeTitle = "ISEMPTY", ArrayParm = "TargetArray"), Category = "Utilities|Array")
 	static bool IsArrayEmpty(const TArray<int32>& TargetArray);
 
