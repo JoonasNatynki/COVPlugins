@@ -38,6 +38,8 @@ public class Spawnables : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"UE4Helpers",
+				"GameplayTags"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
