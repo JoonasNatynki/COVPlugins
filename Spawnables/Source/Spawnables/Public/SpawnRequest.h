@@ -7,6 +7,8 @@ class AActor;
 class USpawnerComponent;
 class USpawnable;
 
+DECLARE_LOG_CATEGORY_EXTERN(LogSpawnRequest, Log, All);
+
 USTRUCT(Blueprintable)
 struct FSpawnRequest
 {

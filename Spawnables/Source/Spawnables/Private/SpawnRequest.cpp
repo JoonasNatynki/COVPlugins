@@ -4,6 +4,8 @@
 #include "SpawnablePoolComponent.h"
 #include "SpawnerWorldSubSystem.h"
 
+DEFINE_LOG_CATEGORY(LogSpawnRequest)
+
 FSpawnRequest::FSpawnRequest(
 	const TSubclassOf<USpawnable>& InSpawnable,
 	const FTransform& InSpawnTransform,
@@ -65,9 +67,17 @@ void FSpawnRequest::InitializeFromSpawner(const USpawnerComponent* SpawnerCompon
 	bTryToAdjustForEncroachingGeometry = SpawnerComponent->bTryToAdjustForEncroachingGeometry;
 	Instigator = SpawnerComponent->GetOwner();
 
-	if (SpawnerComponent->bUseSpawnableShapes && SpawnerComponent->HasSpawnableShapes())
+	if (SpawnerComponent->bUseSpawnableShapes)
 	{
-		if (const ISpawningShapeIF* RandShape = USpawnerWorldSubSystem::GetRandomSpawningShapeComponentOnActor(
+		if (!SpawnerComponent->HasSpawnableShapes())
+		{
+			UE_LOG(LogSpawnRequest, Warning, TEXT("Spawner on actor (%s) was set to use spawnable shapes, but it"
+				 " did not have any. Did you forget to add spawnable shapes?"),
+				 *GetNameSafe(SpawnerComponent->GetOwner()));
+
+			SpawnTransform = SpawnerComponent->GetComponentTransform();
+		}
+		else if (const ISpawningShapeIF* RandShape = USpawnerWorldSubSystem::GetRandomSpawningShapeComponentOnActor(
 			SpawnerComponent->GetOwner(),
 			Spawnable->GetDefaultObject<USpawnable>()))
 		{
@@ -77,6 +87,17 @@ void FSpawnRequest::InitializeFromSpawner(const USpawnerComponent* SpawnerCompon
 					SpawnerComponent->bTryFindSurfaceToPlace);
 			
 			SpawnTransform.SetLocation(RandPointInShape);
+
+			FVector Origin;
+			FVector BoxExtent;
+			SpawnerComponent->GetOwner()->GetActorBounds(true, Origin, BoxExtent, true);
+			const FBox SpawnBB(Origin - BoxExtent, Origin + BoxExtent);
+			// Consume that point in the shape so that it doesn't give other spawn points within that space
+			ISpawningShapeIF::Execute_ConsumeSpawnSpace(
+					CastChecked<UObject>(RandShape),
+					SpawnTransform,
+					SpawnBB
+					);
 		}
 	}
 	else
@@ -84,7 +105,6 @@ void FSpawnRequest::InitializeFromSpawner(const USpawnerComponent* SpawnerCompon
 		SpawnTransform = SpawnerComponent->GetComponentTransform();
 	}
 }
-
 
 const FString FSpawnRequest::ToString() const
 {
