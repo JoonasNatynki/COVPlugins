@@ -8,7 +8,7 @@ UCLASS(Abstract)
 class USpawnableActor : public USpawnable
 {
 	GENERATED_BODY()
-
+	
 	UPROPERTY(Category = "Spawnable", EditDefaultsOnly)
 	TSubclassOf<AActor>  SpawnableClass;
 

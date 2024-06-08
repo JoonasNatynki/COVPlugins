@@ -1,6 +1,7 @@
 #include "SpawnRequest.h"
 #include "SpawnerComponent.h"
 #include "Spawnable.h"
+#include "SpawnableActor.h"
 #include "SpawnablePoolComponent.h"
 #include "SpawnerWorldSubSystem.h"
 
@@ -77,27 +78,37 @@ void FSpawnRequest::InitializeFromSpawner(const USpawnerComponent* SpawnerCompon
 
 			SpawnTransform = SpawnerComponent->GetComponentTransform();
 		}
-		else if (const ISpawningShapeIF* RandShape = USpawnerWorldSubSystem::GetRandomSpawningShapeComponentOnActor(
+		else if (ISpawningShapeIF* RandShape = USpawnerWorldSubSystem::GetRandomSpawningShapeComponentOnActor(
 			SpawnerComponent->GetOwner(),
 			Spawnable->GetDefaultObject<USpawnable>()))
 		{
+			
 			const FVector RandPointInShape =
 				ISpawningShapeIF::Execute_GetRandomPointInShapeComponent(
 					CastChecked<UObject>(RandShape),
 					SpawnerComponent->bTryFindSurfaceToPlace);
-			
+
 			SpawnTransform.SetLocation(RandPointInShape);
 
+			/*
 			FVector Origin;
 			FVector BoxExtent;
-			SpawnerComponent->GetOwner()->GetActorBounds(true, Origin, BoxExtent, true);
+			
+			const TSubclassOf<AActor> SpawnableClass = Spawnable->GetDefaultObject<USpawnable>()->GetSpawnableClass();
+			AActor* TempActor = SpawnerComponent->GetWorld()->SpawnActor<AActor>(SpawnableClass);
+			TempActor->GetActorBounds(true, Origin, BoxExtent, true);
+			TempActor->Destroy();
 			const FBox SpawnBB(Origin - BoxExtent, Origin + BoxExtent);
+			const FTransform RandSpawnTransform = RandShape->FindPlacementForBox(Cast<UBoxComponent>(RandShape), SpawnBB);
+			
+			SpawnTransform = RandSpawnTransform; 
 			// Consume that point in the shape so that it doesn't give other spawn points within that space
 			ISpawningShapeIF::Execute_ConsumeSpawnSpace(
-					CastChecked<UObject>(RandShape),
-					SpawnTransform,
-					SpawnBB
-					);
+				CastChecked<UObject>(RandShape),
+				SpawnTransform,
+				SpawnBB
+			);
+			*/
 		}
 	}
 	else
