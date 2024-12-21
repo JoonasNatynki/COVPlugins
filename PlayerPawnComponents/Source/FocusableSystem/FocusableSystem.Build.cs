@@ -1,10 +1,8 @@
-// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
-
 using UnrealBuildTool;
 
-public class FocusingComponent : ModuleRules
+public class FocusableSystem : ModuleRules
 {
-	public FocusingComponent(ReadOnlyTargetRules Target) : base(Target)
+	public FocusableSystem(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
