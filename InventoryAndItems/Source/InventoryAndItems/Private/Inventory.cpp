@@ -1,6 +1,6 @@
 #include "Inventory.h"
 #include "InventoryItem.h"
-#include "PropertyExchangableItemBase.h"
+#include "PropertyExchangeableItemBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
@@ -60,7 +60,7 @@ void UInventoryComponent::TransferInventoryDataToObject(UObject* FromObject, UOb
 
 bool UInventoryComponent::ShouldIgnoreBaseClassPropertyCopy(const FProperty& Property1)
 {
-	for (TFieldIterator<FProperty> Property_1(APropertyExchangableItemBase::StaticClass()); Property_1; ++Property_1)
+	for (TFieldIterator<FProperty> Property_1(APropertyExchangeableItemBase::StaticClass()); Property_1; ++Property_1)
 	{
 		const bool bNamesAndTypesMatch = Property_1->SameType(&Property1) && (Property_1->GetFName() == Property1.GetFName());
 		

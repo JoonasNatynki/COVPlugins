@@ -1,8 +1,7 @@
-// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
-
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/SCS_Node.h"
 #include "Runtime/Engine/Classes/Engine/BlueprintGeneratedClass.h"
 #include "Runtime/Engine/Classes/Engine/SimpleConstructionScript.h"
 #include "GameFramework/PlayerController.h"

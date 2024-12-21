@@ -4,12 +4,12 @@
 
 #include "CoreMinimal.h"
 
-#include "PropertyExchangableItemBase.h"
+#include "PropertyExchangeableItemBase.h"
 #include "GameFramework/Actor.h"
 #include "InventoryItemBase.generated.h"
 
 UCLASS()
-class INVENTORYANDITEMS_API AInventoryItemBase : public APropertyExchangableItemBase
+class INVENTORYANDITEMS_API AInventoryItemBase : public APropertyExchangeableItemBase
 {
 	GENERATED_BODY()
 	
