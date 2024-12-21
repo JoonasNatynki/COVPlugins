@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "IcoSphereComponent.generated.h"
 
+// TODO: This doesn't need to be a component. Make this into a function only if possible in the library
+
 USTRUCT()
 struct FTriangle
 {
